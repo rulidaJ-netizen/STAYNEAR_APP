@@ -1,213 +1,6 @@
 part of '../../main.dart';
 
-class BoarderHome extends StatefulWidget {
-  const BoarderHome({
-    required this.listing,
-    required this.favorite,
-    required this.onFavorite,
-    required this.onListing,
-    required this.onFavorites,
-    required this.onProfile,
-    super.key,
-  });
-  final Listing listing;
-  final bool favorite;
-  final VoidCallback onFavorite, onListing, onFavorites, onProfile;
-  @override
-  State<BoarderHome> createState() => _BoarderHomeState();
-}
-
-class _BoarderHomeState extends State<BoarderHome> {
-  String query = '';
-  int filter = 0;
-
-  @override
-  Widget build(BuildContext context) {
-    final listings =
-        [
-          widget.listing,
-          Listing(
-            title: 'ZaiLand BH',
-            address: 'San Isidro, Cainta, Rizal',
-            price: 1500,
-            image: alternateRoomImage,
-          ),
-        ].where((item) {
-          final text = '${item.title} ${item.address}'.toLowerCase();
-          final matchesQuery =
-              query.trim().isEmpty || text.contains(query.toLowerCase().trim());
-          final matchesFilter = filter != 2 || item.price < 2000;
-          return matchesQuery && matchesFilter;
-        }).toList();
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 15, 16, 9),
-          child: Row(
-            children: [
-              const AppLogo(),
-              const Spacer(),
-              IconButton(
-                onPressed: widget.onProfile,
-                icon: const Icon(Icons.person_outline_rounded, size: 21),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 2, 16, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Find Your Perfect Boarding',
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
-                    color: ink,
-                  ),
-                ),
-                const Text(
-                  'House',
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.w800,
-                    color: blue,
-                  ),
-                ),
-                const SizedBox(height: 5),
-                const Text(
-                  'Discover comfortable and affordable places to stay.',
-                  style: TextStyle(fontSize: 10, color: muted),
-                ),
-                const SizedBox(height: 15),
-                TextField(
-                  onChanged: (value) => setState(() => query = value),
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(Icons.search, size: 18),
-                    suffixIcon: IconButton(
-                      onPressed: () {},
-                      icon: const Icon(
-                        Icons.tune_rounded,
-                        size: 17,
-                        color: blue,
-                      ),
-                    ),
-                    hintText: 'Search by location...',
-                    hintStyle: const TextStyle(fontSize: 10),
-                    filled: true,
-                    fillColor: Colors.white,
-                    contentPadding: EdgeInsets.zero,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: line),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: line),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    FilterPill(
-                      text: 'All',
-                      selected: filter == 0,
-                      onTap: () => setState(() => filter = 0),
-                    ),
-                    FilterPill(
-                      text: 'Near me',
-                      selected: filter == 1,
-                      onTap: () => setState(() => filter = 1),
-                    ),
-                    FilterPill(
-                      text: 'Under PHP 2,000',
-                      selected: filter == 2,
-                      onTap: () => setState(() => filter = 2),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 17),
-                const Text(
-                  'Recommended for you',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: ink,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                if (listings.isEmpty)
-                  const EmptyState(
-                    icon: Icons.search_off,
-                    title: 'No listings found',
-                    text: 'Try another location or filter.',
-                  ),
-                ...listings.asMap().entries.map(
-                  (entry) => Padding(
-                    padding: EdgeInsets.only(
-                      bottom: entry.key == listings.length - 1 ? 0 : 10,
-                    ),
-                    child: BoarderListingCard(
-                      listing: entry.value,
-                      favorite: entry.key == 0 && widget.favorite,
-                      onFavorite: entry.key == 0 ? widget.onFavorite : () {},
-                      onTap: entry.key == 0 ? widget.onListing : () {},
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        BottomNav(
-          index: 0,
-          onHome: () {},
-          onFavorites: widget.onFavorites,
-          onProfile: widget.onProfile,
-        ),
-      ],
-    );
-  }
-}
-
-class FilterPill extends StatelessWidget {
-  const FilterPill({
-    required this.text,
-    required this.selected,
-    required this.onTap,
-    super.key,
-  });
-  final String text;
-  final bool selected;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      margin: const EdgeInsets.only(right: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-      decoration: BoxDecoration(
-        color: selected ? paleBlue : Colors.white,
-        border: Border.all(color: selected ? blue : line),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 9,
-          color: selected ? blue : muted,
-          fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-        ),
-      ),
-    ),
-  );
-}
-
+/// Reused by Search and Favorites; favorite state belongs to ListingStore.
 class BoarderListingCard extends StatelessWidget {
   const BoarderListingCard({
     required this.listing,
@@ -219,153 +12,243 @@ class BoarderListingCard extends StatelessWidget {
   final Listing listing;
   final bool favorite;
   final VoidCallback onFavorite, onTap;
+
   @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
+  Widget build(BuildContext context) => Material(
+    color: Colors.white,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+      side: BorderSide(color: line.withValues(alpha: .6)),
+    ),
+    clipBehavior: Clip.antiAlias,
+    child: InkWell(
+      key: ValueKey('property-${listing.id}'),
       onTap: onTap,
-      child: CardShell(
-        padding: EdgeInsets.zero,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                Photo(url: listing.image, height: 120),
-                Positioned(
-                  right: 9,
-                  top: 9,
-                  child: GestureDetector(
-                    onTap: onFavorite,
-                    child: CircleAvatar(
-                      radius: 15,
-                      backgroundColor: Colors.white,
-                      child: Icon(
-                        favorite ? Icons.favorite : Icons.favorite_border,
-                        size: 17,
-                        color: favorite ? const Color(0xFFF05461) : ink,
-                      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Stack(
+            children: [
+              LayoutBuilder(
+                builder: (context, constraints) => Photo(
+                  url: listing.image,
+                  height: constraints.maxWidth / 1.8,
+                  borderRadius: BorderRadius.zero,
+                ),
+              ),
+              Positioned(
+                left: 12,
+                top: 12,
+                child: IconButton(
+                  key: ValueKey('favorite-${listing.id}'),
+                  onPressed: onFavorite,
+                  tooltip: favorite
+                      ? 'Remove from Favorites'
+                      : 'Add to Favorites',
+                  isSelected: favorite,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: favorite ? const Color(0xFFEF4444) : muted,
+                    minimumSize: const Size(44, 44),
+                  ),
+                  icon: Icon(
+                    favorite ? Icons.favorite : Icons.favorite_border,
+                    size: 23,
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 12,
+                top: 16,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: listing.available && listing.availableRooms > 0
+                        ? const Color(0xFF22A866)
+                        : muted,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    '${listing.available ? listing.availableRooms : 0} Available',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final title = Text(
+                      listing.title,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: ink,
+                      ),
+                    );
+                    final price = Text.rich(
+                      TextSpan(
+                        text: 'PHP ${listing.formattedPrice}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: blue,
+                        ),
+                        children: const [
+                          TextSpan(
+                            text: ' /mo',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.normal,
+                              color: muted,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (constraints.maxWidth < 300 ||
+                        MediaQuery.textScalerOf(context).scale(16) > 20) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [title, const SizedBox(height: 6), price],
+                      );
+                    }
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: title),
+                        const SizedBox(width: 12),
+                        Flexible(child: price),
+                      ],
+                    );
+                  },
+                ),
+                const SizedBox(height: 9),
+                BoarderListingRating(listing: listing),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.location_on_outlined,
+                      size: 17,
+                      color: muted,
+                    ),
+                    const SizedBox(width: 5),
+                    Expanded(
+                      child: Text(
+                        listing.address,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          height: 1.5,
+                          color: muted,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          listing.title,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        'PHP ${listing.price}/mo',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: blue,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on_outlined,
-                        size: 12,
-                        color: muted,
-                      ),
-                      const SizedBox(width: 3),
-                      Text(
-                        listing.address,
-                        style: const TextStyle(fontSize: 9, color: muted),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  const Row(
-                    children: [
-                      SmallFeature(icon: Icons.bed_outlined, text: 'Furnished'),
-                      SmallFeature(icon: Icons.wifi, text: 'Wi-Fi'),
-                      SmallFeature(icon: Icons.ac_unit, text: 'Aircon'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
 }
 
-class SmallFeature extends StatelessWidget {
-  const SmallFeature({required this.icon, required this.text, super.key});
-  final IconData icon;
-  final String text;
+class BoarderListingRating extends StatelessWidget {
+  const BoarderListingRating({required this.listing, super.key});
+  final Listing listing;
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(right: 10),
-    child: Row(
-      children: [
-        Icon(icon, size: 12, color: muted),
-        const SizedBox(width: 3),
-        Text(text, style: const TextStyle(fontSize: 9, color: muted)),
-      ],
-    ),
+  Widget build(BuildContext context) => Wrap(
+    spacing: 5,
+    crossAxisAlignment: WrapCrossAlignment.center,
+    children: [
+      const Icon(Icons.star_rounded, size: 18, color: Color(0xFFF6A623)),
+      Text(
+        listing.averageRating.toStringAsFixed(1),
+        style: const TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: ink,
+        ),
+      ),
+      Text(
+        '(${listing.reviewCount} ${listing.reviewCount == 1 ? 'review' : 'reviews'})',
+        style: const TextStyle(fontSize: 11, color: muted),
+      ),
+    ],
   );
 }
 
 class FavoritesPage extends StatelessWidget {
   const FavoritesPage({
-    required this.listing,
-    required this.favorite,
-    required this.onFavorite,
+    required this.store,
     required this.onListing,
     required this.onHome,
     required this.onProfile,
     super.key,
   });
-  final Listing listing;
-  final bool favorite;
-  final VoidCallback onFavorite, onListing, onHome, onProfile;
+  final ListingStore store;
+  final ValueChanged<Listing> onListing;
+  final VoidCallback onHome, onProfile;
+
   @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      TopBar(title: 'My Favorites', action: const SizedBox.shrink()),
-      Expanded(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 2, 16, 18),
-          child: favorite
-              ? BoarderListingCard(
-                  listing: listing,
-                  favorite: true,
-                  onFavorite: onFavorite,
-                  onTap: onListing,
-                )
-              : EmptyState(
-                  icon: Icons.favorite_border,
-                  title: 'No favorites yet',
-                  text: 'Save boarding houses you like to see them here.',
-                ),
-        ),
-      ),
-      BottomNav(
-        index: 1,
-        onHome: onHome,
-        onFavorites: () {},
-        onProfile: onProfile,
-      ),
-    ],
+  Widget build(BuildContext context) => ListenableBuilder(
+    listenable: store,
+    builder: (context, child) {
+      final favorites = store.favorites;
+      return Column(
+        children: [
+          const TopBar(title: 'My Favorites', action: SizedBox.shrink()),
+          Expanded(
+            child: favorites.isEmpty
+                ? const SingleChildScrollView(
+                    child: EmptyState(
+                      icon: Icons.favorite_border,
+                      title: 'No favorites yet',
+                      text: 'Save boarding houses you like to see them here.',
+                    ),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(16, 2, 16, 24),
+                    itemCount: favorites.length,
+                    separatorBuilder: (context, index) =>
+                        const SizedBox(height: 16),
+                    itemBuilder: (context, index) {
+                      final listing = favorites[index];
+                      return BoarderListingCard(
+                        key: ValueKey(listing.id),
+                        listing: listing,
+                        favorite: true,
+                        onFavorite: () => store.toggleFavorite(listing.id),
+                        onTap: () => onListing(listing),
+                      );
+                    },
+                  ),
+          ),
+          BottomNav(
+            index: 1,
+            onHome: onHome,
+            onFavorites: () {},
+            onProfile: onProfile,
+          ),
+        ],
+      );
+    },
   );
 }
 
@@ -380,6 +263,7 @@ class ListingPage extends StatelessWidget {
   final Listing listing;
   final bool favorite;
   final VoidCallback onFavorite, onBack;
+
   @override
   Widget build(BuildContext context) => Column(
     children: [
@@ -388,16 +272,17 @@ class ListingPage extends StatelessWidget {
         onBack: onBack,
         action: IconButton(
           onPressed: onFavorite,
+          tooltip: favorite ? 'Remove from Favorites' : 'Add to Favorites',
           icon: Icon(
             favorite ? Icons.favorite : Icons.favorite_border,
-            color: favorite ? const Color(0xFFF05461) : ink,
+            color: favorite ? const Color(0xFFEF4444) : ink,
             size: 20,
           ),
         ),
       ),
       Expanded(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+          padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -406,20 +291,22 @@ class ListingPage extends StatelessWidget {
                 child: Photo(url: listing.image, height: 190),
               ),
               const SizedBox(height: 14),
-              Row(
+              Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 12,
+                runSpacing: 6,
                 children: [
-                  Expanded(
-                    child: Text(
-                      listing.title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: ink,
-                      ),
+                  Text(
+                    listing.title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: ink,
                     ),
                   ),
                   Text(
-                    'PHP ${listing.price}/mo',
+                    'PHP ${listing.formattedPrice} /mo',
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
@@ -428,20 +315,30 @@ class ListingPage extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 8),
+              BoarderListingRating(listing: listing),
+              const SizedBox(height: 8),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Icon(
                     Icons.location_on_outlined,
-                    size: 14,
+                    size: 16,
                     color: muted,
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    listing.address,
-                    style: const TextStyle(fontSize: 10, color: muted),
+                  Expanded(
+                    child: Text(
+                      listing.address,
+                      style: const TextStyle(fontSize: 12, color: muted),
+                    ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '${listing.available ? listing.availableRooms : 0} Available',
+                style: const TextStyle(fontSize: 12, color: Color(0xFF22A866)),
               ),
               const SizedBox(height: 15),
               const Text(
@@ -453,11 +350,11 @@ class ListingPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Comfortable boarding house with clean, well-maintained rooms '
-                'in a convenient location. Perfect for students and working '
-                'professionals.',
-                style: TextStyle(fontSize: 10, color: muted, height: 1.5),
+              Text(
+                listing.description.isEmpty
+                    ? 'No description provided.'
+                    : listing.description,
+                style: const TextStyle(fontSize: 12, color: muted, height: 1.5),
               ),
               const SizedBox(height: 15),
               const Text(
@@ -469,36 +366,24 @@ class ListingPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              const Row(
-                children: [
-                  Expanded(
-                    child: DetailFeature(
-                      icon: Icons.ac_unit,
-                      text: 'Air Conditioning',
-                    ),
-                  ),
-                  Expanded(
-                    child: DetailFeature(icon: Icons.wifi, text: 'Wi-Fi'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Row(
-                children: [
-                  Expanded(
-                    child: DetailFeature(
-                      icon: Icons.bed_outlined,
-                      text: 'Furnished',
-                    ),
-                  ),
-                  Expanded(
-                    child: DetailFeature(
-                      icon: Icons.local_laundry_service_outlined,
-                      text: 'Laundry',
-                    ),
-                  ),
-                ],
-              ),
+              if (listing.amenities.isEmpty)
+                const Text(
+                  'No amenities listed.',
+                  style: TextStyle(fontSize: 12, color: muted),
+                )
+              else
+                Wrap(
+                  spacing: 16,
+                  runSpacing: 10,
+                  children: listing.amenities
+                      .map(
+                        (amenity) => DetailFeature(
+                          icon: Icons.check_circle_outline,
+                          text: amenity,
+                        ),
+                      )
+                      .toList(),
+                ),
               const SizedBox(height: 15),
               const Text(
                 'Location',
@@ -509,26 +394,44 @@ class ListingPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              Container(
-                height: 145,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE4F0E4),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: line),
-                ),
-                child: const Center(
-                  child: Icon(Icons.location_on, size: 35, color: blue),
+              SelectableText(
+                listing.address,
+                style: const TextStyle(fontSize: 12, color: muted),
+              ),
+              const SizedBox(height: 15),
+              const Text(
+                'Contact Landowner',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: ink,
                 ),
               ),
-              const SizedBox(height: 13),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.chat_bubble_outline, size: 16),
-                  label: const Text('Contact Landowner'),
+              const SizedBox(height: 8),
+              if (listing.contact.trim().isEmpty)
+                const Text(
+                  'No contact information provided.',
+                  style: TextStyle(fontSize: 12, color: muted),
+                )
+              else
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.phone_outlined, color: blue),
+                  title: SelectableText(listing.contact),
+                  trailing: IconButton(
+                    tooltip: 'Copy contact number',
+                    onPressed: () async {
+                      await Clipboard.setData(
+                        ClipboardData(text: listing.contact),
+                      );
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Contact number copied')),
+                      );
+                    },
+                    icon: const Icon(Icons.copy_outlined),
+                  ),
                 ),
-              ),
             ],
           ),
         ),
@@ -543,10 +446,13 @@ class DetailFeature extends StatelessWidget {
   final String text;
   @override
   Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
     children: [
       Icon(icon, size: 16, color: blue),
       const SizedBox(width: 6),
-      Text(text, style: const TextStyle(fontSize: 10, color: ink)),
+      Flexible(
+        child: Text(text, style: const TextStyle(fontSize: 12, color: ink)),
+      ),
     ],
   );
 }

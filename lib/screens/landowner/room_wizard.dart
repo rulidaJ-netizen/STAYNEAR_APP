@@ -24,6 +24,7 @@ class _RoomWizardState extends State<RoomWizard> {
   final price = TextEditingController();
   final availableRooms = TextEditingController();
   final address = TextEditingController();
+  final Set<String> selectedAmenities = {'WiFi', 'Air Conditioning'};
 
   @override
   void dispose() {
@@ -125,6 +126,8 @@ class _RoomWizardState extends State<RoomWizard> {
             image: image.text.trim().isEmpty ? null : image.text.trim(),
             availableRooms: rooms,
             totalRooms: rooms,
+            amenities: selectedAmenities.toList(),
+            description: description.text.trim(),
           ),
         );
       },
@@ -270,10 +273,16 @@ class _RoomWizardState extends State<RoomWizard> {
     ),
   );
 
-  Widget _amenityChip(String label, {bool selected = false}) => ChoiceChip(
+  Widget _amenityChip(String label) => ChoiceChip(
     label: Text(label, style: const TextStyle(fontSize: 8, color: ink)),
-    selected: selected,
-    onSelected: (_) {},
+    selected: selectedAmenities.contains(label),
+    onSelected: (selected) => setState(() {
+      if (selected) {
+        selectedAmenities.add(label);
+      } else {
+        selectedAmenities.remove(label);
+      }
+    }),
     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     visualDensity: const VisualDensity(horizontal: -3, vertical: -3),
     labelPadding: EdgeInsets.zero,
@@ -440,8 +449,8 @@ class _RoomWizardState extends State<RoomWizard> {
               spacing: 5,
               runSpacing: 5,
               children: [
-                _amenityChip('WiFi', selected: true),
-                _amenityChip('Air Conditioning', selected: true),
+                _amenityChip('WiFi'),
+                _amenityChip('Air Conditioning'),
                 _amenityChip('Study Desk'),
                 _amenityChip('Shared Kitchen'),
                 _amenityChip('Private Bathroom'),

@@ -485,13 +485,11 @@ class _AuthPageState extends State<AuthPage> {
               children: [
                 Expanded(
                   child: field(
-                    'Middle Initial',
+                    'Middle Name',
                     middleName,
                     icon: Icons.person_outline,
-                    hint: 'I.',
-                    validator: middleInitialValidator,
-                    inputFormatters: [middleInitialFormatter],
-                    maxLength: 2,
+                   
+                   
                   ),
                 ),
                 const SizedBox(width: 16),

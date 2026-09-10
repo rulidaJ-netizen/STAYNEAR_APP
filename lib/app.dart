@@ -10,17 +10,68 @@ class _StayNearAppState extends State<StayNearApp> {
   UserRole role = UserRole.landlord;
   AppPage page = AppPage.auth;
   bool login = true;
-  bool favorite = false;
+  String? selectedListingId;
+  AppPage listingOrigin = AppPage.boarderHome;
   int wizardStep = 0;
   Listing? ownerListing;
   UserProfile? registeredUser;
   UserProfile? activeUser;
   final demoListing = Listing(
+    id: 'sample-jhes',
     title: 'Jhes BH',
-    address: 'Poblacion Norte, Cainta, Rizal',
-    price: 1300,
-    image: bedroomImage,
+    address: 'Poblacion Norte, Clarin, Bohol',
+    price: 1200,
+    image: roomImage,
+    availableRooms: 5,
+    totalRooms: 5,
+    averageRating: 4.8,
+    reviewCount: 24,
+    amenities: ['WiFi', 'Air Conditioning', 'Study Desk', 'Shared Kitchen'],
+    description: 'Student boarding house near the university in Clarin.',
   );
+  late final ListingStore listingStore = ListingStore(
+    samples: [
+      demoListing,
+      Listing(
+        id: 'sample-zaframar',
+        title: 'ZafraMar BH',
+        address: 'Clarin, Bohol',
+        price: 1200,
+        image: alternateRoomImage,
+        availableRooms: 2,
+        totalRooms: 2,
+        averageRating: 4.9,
+        reviewCount: 18,
+        amenities: ['WiFi', 'Study Desk', 'Laundry Area', 'Parking'],
+      ),
+      Listing(
+        id: 'sample-annhath',
+        title: "AnnHath's Boardinghouse",
+        address: 'Pob. Centro, Clarin, Bohol',
+        price: 1500,
+        image: roomImage,
+        availableRooms: 2,
+        totalRooms: 2,
+        averageRating: 4.7,
+        reviewCount: 31,
+        amenities: ['Air Conditioning', 'Private Bathroom', 'Furnished'],
+      ),
+    ],
+  );
+
+  @override
+  void dispose() {
+    listingStore.dispose();
+    super.dispose();
+  }
+
+  void openListing(Listing listing) {
+    setState(() {
+      selectedListingId = listing.id;
+      listingOrigin = page;
+      page = AppPage.listing;
+    });
+  }
 
   void go(AppPage next) => setState(() => page = next);
 
@@ -77,9 +128,11 @@ class _StayNearAppState extends State<StayNearApp> {
                     activeUser = user;
                     role = user.role;
                   });
-                  go(user.role == UserRole.landlord
-                      ? AppPage.landlordDashboard
-                      : AppPage.boarderHome);
+                  go(
+                    user.role == UserRole.landlord
+                        ? AppPage.landlordDashboard
+                        : AppPage.boarderHome,
+                  );
                   return true;
                 },
               );
@@ -100,6 +153,7 @@ class _StayNearAppState extends State<StayNearApp> {
                 onBack: () => go(AppPage.landlordDashboard),
                 onSave: (updated) {
                   setState(() => ownerListing = updated);
+                  listingStore.upsert(updated);
                   go(AppPage.landlordDashboard);
                 },
               );
@@ -119,6 +173,7 @@ class _StayNearAppState extends State<StayNearApp> {
                     wizardStep = 0;
                     ownerListing = listing;
                   });
+                  listingStore.upsert(listing);
                   go(AppPage.landlordDashboard);
                   WidgetsBinding.instance.addPostFrameCallback((_) {
                     if (mounted) {
@@ -128,29 +183,48 @@ class _StayNearAppState extends State<StayNearApp> {
                 },
               );
             case AppPage.boarderHome:
-              body = BoarderHome(
-                listing: demoListing,
-                favorite: favorite,
-                onFavorite: () => setState(() => favorite = !favorite),
-                onListing: () => go(AppPage.listing),
+              body = BoarderDashboard(
+                store: listingStore,
+                onListing: openListing,
                 onFavorites: () => go(AppPage.favorites),
                 onProfile: () => go(AppPage.profile),
               );
             case AppPage.favorites:
               body = FavoritesPage(
-                listing: demoListing,
-                favorite: favorite,
-                onFavorite: () => setState(() => favorite = !favorite),
-                onListing: () => go(AppPage.listing),
+                store: listingStore,
+                onListing: openListing,
                 onHome: () => go(AppPage.boarderHome),
                 onProfile: () => go(AppPage.profile),
               );
             case AppPage.listing:
-              body = ListingPage(
-                listing: demoListing,
-                favorite: favorite,
-                onFavorite: () => setState(() => favorite = !favorite),
-                onBack: () => go(AppPage.boarderHome),
+              body = ListenableBuilder(
+                listenable: listingStore,
+                builder: (context, child) {
+                  final selectedListing = listingStore.byId(selectedListingId);
+                  return selectedListing == null
+                      ? Column(
+                          children: [
+                            TopBar(
+                              title: 'Property Details',
+                              onBack: () => go(listingOrigin),
+                            ),
+                            const Expanded(
+                              child: EmptyState(
+                                icon: Icons.home_outlined,
+                                title: 'Property no longer available',
+                                text: 'Return to Search to find another property.',
+                              ),
+                            ),
+                          ],
+                        )
+                      : ListingPage(
+                          listing: selectedListing,
+                          favorite: listingStore.isFavorite(selectedListing.id),
+                          onFavorite: () =>
+                              listingStore.toggleFavorite(selectedListing.id),
+                          onBack: () => go(listingOrigin),
+                        );
+                },
               );
             case AppPage.profile:
               body = ProfilePage(
@@ -245,6 +319,10 @@ class _StayNearAppState extends State<StayNearApp> {
                         ),
                         onPressed: () {
                           Navigator.pop(context);
+                          final deletedListing = ownerListing;
+                          if (deletedListing != null) {
+                            listingStore.remove(deletedListing.id);
+                          }
                           setState(() => ownerListing = null);
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Listing deleted')),

@@ -109,8 +109,13 @@ class AuthField extends StatelessWidget {
 }
 
 class AppLogo extends StatelessWidget {
-  const AppLogo({this.showRole = false, super.key});
+  const AppLogo({
+    this.showRole = false,
+    this.roleLabel = 'Landowner',
+    super.key,
+  });
   final bool showRole;
+  final String roleLabel;
   @override
   Widget build(BuildContext context) => Row(
     mainAxisSize: MainAxisSize.min,
@@ -142,13 +147,9 @@ class AppLogo extends StatelessWidget {
             ),
           ),
           if (showRole)
-            const Text(
-              'Landowner',
-              style: TextStyle(
-                color: muted,
-                fontSize: 8,
-                height: 1,
-              ),
+            Text(
+              roleLabel,
+              style: const TextStyle(color: muted, fontSize: 8, height: 1),
             ),
         ],
       ),

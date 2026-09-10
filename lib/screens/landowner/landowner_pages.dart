@@ -459,7 +459,10 @@ class _EditListingPageState extends State<EditListingPage> {
     text: '${widget.listing.availableRooms}',
   );
   late final TextEditingController description = TextEditingController(
-    text: 'Comfortable boarding house located in a quiet neighborhood.',
+    text: widget.listing.description,
+  );
+  late final TextEditingController contact = TextEditingController(
+    text: widget.listing.contact,
   );
   late bool available = widget.listing.available;
 
@@ -471,6 +474,7 @@ class _EditListingPageState extends State<EditListingPage> {
     image.dispose();
     availableRooms.dispose();
     description.dispose();
+    contact.dispose();
     super.dispose();
   }
 
@@ -513,34 +517,37 @@ class _EditListingPageState extends State<EditListingPage> {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    RadioGroup<bool>(
-                      groupValue: available,
-                      onChanged: (v) {
-                        if (v != null) {
-                          setState(() => available = v);
-                        }
-                      },
-                      child: Column(
-                        children: [
-                          RadioListTile<bool>(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            value: true,
-                            title: const Text(
-                              'Available',
-                              style: TextStyle(fontSize: 11),
+                    Material(
+                      type: MaterialType.transparency,
+                      child: RadioGroup<bool>(
+                        groupValue: available,
+                        onChanged: (v) {
+                          if (v != null) {
+                            setState(() => available = v);
+                          }
+                        },
+                        child: Column(
+                          children: [
+                            RadioListTile<bool>(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              value: true,
+                              title: const Text(
+                                'Available',
+                                style: TextStyle(fontSize: 11),
+                              ),
                             ),
-                          ),
-                          RadioListTile<bool>(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            value: false,
-                            title: const Text(
-                              'Unavailable',
-                              style: TextStyle(fontSize: 11),
+                            RadioListTile<bool>(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              value: false,
+                              title: const Text(
+                                'Unavailable',
+                                style: TextStyle(fontSize: 11),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -560,12 +567,9 @@ class _EditListingPageState extends State<EditListingPage> {
                     const FieldLabel('Location'),
                     TextFieldBox(controller: address),
                     const FieldLabel('Listing Photo URL'),
-                    TextFieldBox(
-                      controller: image,
-                      hint: 'https://...',
-                    ),
+                    TextFieldBox(controller: image, hint: 'https://...'),
                     const FieldLabel('Contact Number'),
-                    const TextFieldBox(hint: '0912 345 6789'),
+                    TextFieldBox(controller: contact, hint: '0912 345 6789'),
                     const FieldLabel('Description'),
                     TextFieldBox(controller: description, maxLines: 4),
                   ],
@@ -591,6 +595,10 @@ class _EditListingPageState extends State<EditListingPage> {
                             widget.listing.price;
                         widget.onSave(
                           Listing(
+                            id: widget.listing.id,
+                            amenities: widget.listing.amenities,
+                            description: description.text.trim(),
+                            contact: contact.text.trim(),
                             title: name.text.trim().isEmpty
                                 ? widget.listing.title
                                 : name.text.trim(),

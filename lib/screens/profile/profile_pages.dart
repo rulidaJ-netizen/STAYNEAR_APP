@@ -314,67 +314,48 @@ class BottomNav extends StatelessWidget {
   });
   final int index;
   final VoidCallback onHome, onFavorites, onProfile;
+
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.only(top: 7, bottom: 5),
+  Widget build(BuildContext context) => DecoratedBox(
     decoration: const BoxDecoration(
       color: Colors.white,
       border: Border(top: BorderSide(color: line)),
     ),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        NavItem(
-          icon: Icons.home_outlined,
-          label: 'Home',
-          selected: index == 0,
-          onTap: onHome,
+    child: NavigationBarTheme(
+      data: NavigationBarThemeData(
+        backgroundColor: Colors.white,
+        indicatorColor: paleBlue,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected) ? blue : muted,
+            size: 23,
+          ),
         ),
-        NavItem(
-          icon: Icons.favorite_border,
-          label: 'Favorites',
-          selected: index == 1,
-          onTap: onFavorites,
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: states.contains(WidgetState.selected) ? blue : muted,
+          ),
         ),
-        NavItem(
-          icon: Icons.person_outline,
-          label: 'Profile',
-          selected: index == 2,
-          onTap: onProfile,
-        ),
-      ],
-    ),
-  );
-}
-
-class NavItem extends StatelessWidget {
-  const NavItem({
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    super.key,
-  });
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  @override
-  Widget build(BuildContext context) => InkWell(
-    onTap: onTap,
-    child: SizedBox(
-      width: 75,
-      child: Column(
-        children: [
-          Icon(icon, size: 19, color: selected ? blue : muted),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 9,
-              color: selected ? blue : muted,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-            ),
+      ),
+      child: NavigationBar(
+        height: 68,
+        selectedIndex: index,
+        onDestinationSelected: (value) {
+          FocusScope.of(context).unfocus();
+          [onHome, onFavorites, onProfile][value]();
+        },
+        destinations: const [
+          NavigationDestination(icon: Icon(Icons.search), label: 'Search'),
+          NavigationDestination(
+            icon: Icon(Icons.favorite_border),
+            selectedIcon: Icon(Icons.favorite),
+            label: 'Favorites',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            label: 'Profile',
           ),
         ],
       ),
@@ -416,29 +397,53 @@ class EmptyState extends StatelessWidget {
 }
 
 class Photo extends StatelessWidget {
-  const Photo({required this.url, required this.height, super.key});
+  const Photo({
+    required this.url,
+    required this.height,
+    this.borderRadius = const BorderRadius.all(Radius.circular(7)),
+    super.key,
+  });
   final String? url;
   final double height;
+  final BorderRadius borderRadius;
+
   @override
-  Widget build(BuildContext context) => ClipRRect(
-    borderRadius: BorderRadius.circular(7),
-    child: url == null || url!.trim().isEmpty
-        ? Container(
-            width: double.infinity,
-            height: height,
-            color: const Color(0xFFE3EAF2),
-            child: const Icon(Icons.image_outlined, color: muted, size: 30),
-          )
-        : Image.network(
-            url!,
-            width: double.infinity,
-            height: height,
-            fit: BoxFit.cover,
-            errorBuilder: (context, error, stack) => Container(
-              height: height,
-              color: const Color(0xFFE3EAF2),
-              child: const Icon(Icons.image_outlined, color: muted, size: 30),
-            ),
-          ),
-  );
+  Widget build(BuildContext context) {
+    final source = url?.trim() ?? '';
+    final Widget fallback = Container(
+      width: double.infinity,
+      height: height,
+      color: const Color(0xFFE3EAF2),
+      child: const Icon(Icons.image_outlined, color: muted, size: 30),
+    );
+    Widget content = fallback;
+    if (source.isNotEmpty) {
+      final uri = Uri.tryParse(source);
+      ImageProvider<Object>? provider;
+      if (uri != null && (uri.scheme == 'http' || uri.scheme == 'https')) {
+        provider = NetworkImage(source);
+      } else if (source.startsWith('assets/') || source.startsWith('asset:')) {
+        provider = AssetImage(source.replaceFirst(RegExp(r'^asset:(//)?'), ''));
+      } else if (uri?.scheme == 'data') {
+        try {
+          final data = uri?.data;
+          if (data != null) provider = MemoryImage(data.contentAsBytes());
+        } on FormatException {
+          provider = null;
+        }
+      } else {
+        provider = localListingImage(source);
+      }
+      if (provider != null) {
+        content = Image(
+          image: provider,
+          width: double.infinity,
+          height: height,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stack) => fallback,
+        );
+      }
+    }
+    return ClipRRect(borderRadius: borderRadius, child: content);
+  }
 }
