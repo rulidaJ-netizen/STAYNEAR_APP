@@ -1,6 +1,6 @@
 part of '../../main.dart';
 
-/// Reused by Search and Favorites; favorite state belongs to ListingStore.
+/// Listing summary card; favorite state belongs to ListingStore.
 class BoarderListingCard extends StatelessWidget {
   const BoarderListingCard({
     required this.listing,
@@ -191,64 +191,6 @@ class BoarderListingRating extends StatelessWidget {
         style: const TextStyle(fontSize: 11, color: muted),
       ),
     ],
-  );
-}
-
-class FavoritesPage extends StatelessWidget {
-  const FavoritesPage({
-    required this.store,
-    required this.onListing,
-    required this.onHome,
-    required this.onProfile,
-    super.key,
-  });
-  final ListingStore store;
-  final ValueChanged<Listing> onListing;
-  final VoidCallback onHome, onProfile;
-
-  @override
-  Widget build(BuildContext context) => ListenableBuilder(
-    listenable: store,
-    builder: (context, child) {
-      final favorites = store.favorites;
-      return Column(
-        children: [
-          const TopBar(title: 'My Favorites', action: SizedBox.shrink()),
-          Expanded(
-            child: favorites.isEmpty
-                ? const SingleChildScrollView(
-                    child: EmptyState(
-                      icon: Icons.favorite_border,
-                      title: 'No favorites yet',
-                      text: 'Save boarding houses you like to see them here.',
-                    ),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 2, 16, 24),
-                    itemCount: favorites.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 16),
-                    itemBuilder: (context, index) {
-                      final listing = favorites[index];
-                      return BoarderListingCard(
-                        key: ValueKey(listing.id),
-                        listing: listing,
-                        favorite: true,
-                        onFavorite: () => store.toggleFavorite(listing.id),
-                        onTap: () => onListing(listing),
-                      );
-                    },
-                  ),
-          ),
-          BottomNav(
-            index: 1,
-            onHome: onHome,
-            onFavorites: () {},
-            onProfile: onProfile,
-          ),
-        ],
-      );
-    },
   );
 }
 

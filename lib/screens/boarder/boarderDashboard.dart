@@ -1,4 +1,3 @@
-// ignore_for_file: file_names
 part of '../../main.dart';
 
 class BoarderDashboard extends StatefulWidget {
@@ -56,7 +55,6 @@ class _BoarderDashboardState extends State<BoarderDashboard> {
         'Laundry Area',
         'Water Included',
         'Electricity Included',
-        'Furnished',
         ...allProperties.expand((listing) => listing.amenities),
       ]) {
         if (label.trim().isNotEmpty) {

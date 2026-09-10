@@ -16,6 +16,7 @@ part 'screens/auth/auth_page.dart';
 part 'screens/landowner/landowner_pages.dart';
 part 'screens/landowner/room_wizard.dart';
 part 'screens/boarder/boarderDashboard.dart';
+part 'screens/boarder/favoriteList.dart';
 part 'screens/boarder/boarder_pages.dart';
 part 'screens/profile/profile_pages.dart';
 

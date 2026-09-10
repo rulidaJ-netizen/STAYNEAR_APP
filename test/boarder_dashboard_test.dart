@@ -430,7 +430,13 @@ void main() {
     expect(find.byType(FavoritesPage), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('favorite-sample-zaframar')));
     await tester.pumpAndSettle();
-    expect(find.text('No favorites yet'), findsOneWidget);
+    expect(find.text('No saved properties yet'), findsOneWidget);
+    await tester.tap(find.text('Profile'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ProfilePage), findsOneWidget);
+    tester.widget<ProfilePage>(find.byType(ProfilePage)).onFavorites();
+    await tester.pumpAndSettle();
+    expect(find.byType(FavoritesPage), findsOneWidget);
     await tester.tap(find.text('Search'));
     await tester.pumpAndSettle();
     await tester.enterText(
