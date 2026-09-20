@@ -16,7 +16,7 @@ Dart `part` organization and `AppPage` routes are retained.
 | `lib/widgets/auth_widgets.dart` | Optional role label on the existing logo; its default branding remains unchanged. |
 | `lib/screens/profile/profile_pages.dart` | Update the shared bottom navigation and Photo widget defined in this file; Profile screens retain their existing design. |
 | `lib/widgets/listing_image_io.dart`, `lib/widgets/listing_image_stub.dart` | Local image support on Android/desktop with a compatible web fallback. |
-| `lib/screens/landowner/room_wizard.dart`, `lib/screens/landowner/landowner_pages.dart` | Save selected amenities, descriptions and contact data; preserve IDs and amenities on edits. Add a transparent Material wrapper to fix the existing availability-control rendering assertion. |
+| `lib/landowner/addRoom.dart`, `lib/landowner/landownerDashboard.dart`, `lib/landowner/editListing.dart` | Save selected amenities, descriptions and contact data; preserve IDs and amenities on edits. The dashboard and editor use the shared listing store. |
 | `android/app/src/main/AndroidManifest.xml` | Internet permission for uploaded network images in Android builds. |
 | `test/listing_store_test.dart`, `test/boarder_dashboard_test.dart` | Regression coverage for data, interactions, navigation, images and layouts. |
 

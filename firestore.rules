@@ -1,0 +1,93 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function role(value) {
+      return signedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == value;
+    }
+    function owner(listingId) {
+      return role('landowner') && get(/databases/$(database)/documents/listings/$(listingId)).data.landownerId == request.auth.uid;
+    }
+    function validProfile(data) {
+      return data.keys().hasOnly(['uid','firstName','middleName','lastName','fullName','email','birthday','gender','phoneNumber','address','role','profilePhotoUrl','createdAt','updatedAt'])
+        && data.uid == request.auth.uid
+        && data.role in ['boarder', 'landowner']
+        && data.fullName is string && data.fullName.size() > 0 && data.fullName.size() <= 200
+        && data.email == request.auth.token.email
+        && data.phoneNumber is string && data.phoneNumber.size() <= 40
+        && data.address is string && data.address.size() <= 2000
+        && (data.profilePhotoUrl == null || data.profilePhotoUrl is string)
+        && data.createdAt is timestamp && data.updatedAt == request.time;
+    }
+    function validListing(data, listingId) {
+      return data.keys().hasOnly(['listingId','landownerId','propertyName','description','contactNumber','monthlyRent','totalRooms','availableRooms','amenities','imageUrls','photoUrls','fullAddress','distanceFromUniversity','latitude','longitude','googleMapsUrl','status','views','billingInfo','houseInformation','createdAt','updatedAt'])
+        && data.listingId == listingId && data.landownerId == request.auth.uid
+        && data.propertyName is string && data.propertyName.size() > 0 && data.propertyName.size() <= 300
+        && data.description is string && data.description.size() <= 20000
+        && data.contactNumber is string && data.contactNumber.size() <= 40
+        && data.monthlyRent is int && data.monthlyRent >= 0
+        && data.totalRooms is int && data.totalRooms >= 0
+        && data.availableRooms is int && data.availableRooms >= 0 && data.availableRooms <= data.totalRooms
+        && data.amenities is list && data.amenities.size() <= 50
+        && ((data.keys().hasAll(['imageUrls']) && data.imageUrls is list && data.imageUrls.size() <= 4)
+          || (data.keys().hasAll(['photoUrls']) && data.photoUrls is list && data.photoUrls.size() <= 4))
+        && data.fullAddress is string && data.fullAddress.size() > 0 && data.fullAddress.size() <= 2000
+        && (data.distanceFromUniversity == null || data.distanceFromUniversity is string)
+        && ((data.latitude == null && data.longitude == null) ||
+          (data.latitude is number && data.latitude >= -90 && data.latitude <= 90 &&
+           data.longitude is number && data.longitude >= -180 && data.longitude <= 180))
+        && (data.googleMapsUrl == null || data.googleMapsUrl is string)
+        && data.status in ['Available', 'Unavailable', 'Deleting']
+        && data.views is int && data.views >= 0
+        && data.createdAt is timestamp && data.updatedAt == request.time;
+    }
+    match /users/{userId} {
+      allow read: if signedIn() && request.auth.uid == userId;
+      allow create: if signedIn() && request.auth.uid == userId && validProfile(request.resource.data)
+        && request.resource.data.createdAt == request.time;
+      allow update: if signedIn() && request.auth.uid == userId && validProfile(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fullName','phoneNumber','email','address','profilePhotoUrl','updatedAt']);
+      allow delete: if false;
+      match /favorites/{listingId} {
+        allow read: if signedIn() && request.auth.uid == userId;
+        allow create, update: if request.auth.uid == userId && role('boarder')
+          && request.resource.data.keys().hasOnly(['listingId','createdAt'])
+          && request.resource.data.listingId == listingId && request.resource.data.createdAt == request.time
+          && exists(/databases/$(database)/documents/listings/$(listingId))
+          && get(/databases/$(database)/documents/listings/$(listingId)).data.status != 'Deleting';
+        allow delete: if signedIn() && request.auth.uid == userId && role('boarder');
+      }
+    }
+    match /listings/{listingId} {
+      allow read: if signedIn();
+      allow create: if role('landowner') && validListing(request.resource.data, listingId)
+        && request.resource.data.views == 0 && request.resource.data.status != 'Deleting'
+        && request.resource.data.createdAt == request.time;
+      allow update: if (role('landowner') && resource.data.landownerId == request.auth.uid
+        && validListing(request.resource.data, listingId)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.views == resource.data.views)
+        || (role('boarder') && resource.data.status != 'Deleting'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['views'])
+          && request.resource.data.views == resource.data.views + 1);
+      allow delete: if role('landowner') && resource.data.landownerId == request.auth.uid;
+      match /reviews/{reviewId} {
+        allow read: if signedIn();
+        allow create: if role('boarder')
+          && exists(/databases/$(database)/documents/listings/$(listingId))
+          && get(/databases/$(database)/documents/listings/$(listingId)).data.status != 'Deleting'
+          && request.resource.data.keys().hasOnly(['reviewId','listingId','boarderId','boarderName','rating','comment','createdAt'])
+          && request.resource.data.reviewId == reviewId && request.resource.data.listingId == listingId
+          && request.resource.data.boarderId == request.auth.uid
+          && request.resource.data.boarderName == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.fullName
+          && request.resource.data.rating is int && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+          && request.resource.data.comment is string && request.resource.data.comment.size() > 0 && request.resource.data.comment.size() <= 10000
+          && request.resource.data.createdAt == request.time;
+        allow update: if false;
+        // Cleanup only: the existing Landowner review UI remains read-only.
+        allow delete: if owner(listingId)
+          && get(/databases/$(database)/documents/listings/$(listingId)).data.status == 'Deleting';
+      }
+    }
+  }
+}

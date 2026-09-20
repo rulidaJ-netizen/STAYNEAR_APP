@@ -37,7 +37,9 @@ class _BoarderDashboardState extends State<BoarderDashboard> {
   Widget build(BuildContext context) => ListenableBuilder(
     listenable: widget.store,
     builder: (context, child) {
-      final allProperties = widget.store.allProperties;
+      final allProperties = widget.store.allProperties
+          .where((listing) => listing.available)
+          .toList();
       final filteredProperties = allProperties
           .where(
             (listing) =>
@@ -47,14 +49,14 @@ class _BoarderDashboardState extends State<BoarderDashboard> {
       final amenityLabels = <String, String>{};
       for (final label in [
         'WiFi',
-        'Air Conditioning',
-        'Study Desk',
-        'Shared Kitchen',
-        'Private Bathroom',
-        'Parking',
-        'Laundry Area',
-        'Water Included',
-        'Electricity Included',
+            'Air Conditioning',
+            'Study Desk',
+            'Shared Kitchen',
+            'Private Bathroom',
+            'CCTV',
+            'Laundry Area',
+            'Parking',
+            'Balcony',
         ...allProperties.expand((listing) => listing.amenities),
       ]) {
         if (label.trim().isNotEmpty) {

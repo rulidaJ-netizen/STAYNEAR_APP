@@ -64,18 +64,20 @@ class AuthField extends StatelessWidget {
           prefixIcon: icon == null
               ? null
               : Icon(icon, size: 18, color: const Color(0xFF9FA9B8)),
-            suffixIcon: suffixIcon ?? (onToggle == null
-              ? null
-              : IconButton(
-                  onPressed: onToggle,
-                  icon: Icon(
-                    showText
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    size: 18,
-                    color: const Color(0xFF9FA9B8),
-                  ),
-                )),
+          suffixIcon:
+              suffixIcon ??
+              (onToggle == null
+                  ? null
+                  : IconButton(
+                      onPressed: onToggle,
+                      icon: Icon(
+                        showText
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        size: 18,
+                        color: const Color(0xFF9FA9B8),
+                      ),
+                    )),
           hintText: hint,
           hintStyle: const TextStyle(fontSize: 12, color: Color(0xFFA5AFBC)),
           filled: true,
@@ -217,13 +219,13 @@ class CardShell extends StatelessWidget {
     decoration: BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(28),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x140F172A),
-            blurRadius: 24,
-            offset: Offset(0, 8),
-          ),
-        ],
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x140F172A),
+          blurRadius: 24,
+          offset: Offset(0, 8),
+        ),
+      ],
     ),
     child: child,
   );
@@ -266,6 +268,7 @@ class TextFieldBox extends StatelessWidget {
     ),
     this.textFontSize = 11,
     this.hintFontSize = 10,
+    this.keyboardType,
     super.key,
   });
   final String hint;
@@ -280,11 +283,13 @@ class TextFieldBox extends StatelessWidget {
   final BoxConstraints? prefixIconConstraints;
   final EdgeInsetsGeometry contentPadding;
   final double textFontSize, hintFontSize;
+  final TextInputType? keyboardType;
   @override
   Widget build(BuildContext context) => TextField(
     controller: controller,
     obscureText: obscure,
     maxLines: maxLines,
+    keyboardType: keyboardType,
     style: TextStyle(fontSize: textFontSize, color: ink),
     decoration: InputDecoration(
       prefixIcon: prefixIcon == null
@@ -354,17 +359,27 @@ class BrandHeader extends StatelessWidget {
   final VoidCallback onProfile;
   @override
   Widget build(BuildContext context) => Container(
-    color: Colors.white,
-    padding: const EdgeInsets.fromLTRB(16, 11, 16, 9),
+    width: double.infinity,
+    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+    decoration: const BoxDecoration(
+      color: Colors.white,
+      border: Border(bottom: BorderSide(color: line, width: .5)),
+    ),
     child: Row(
       children: [
-        const AppLogo(showRole: true),
-        const Spacer(),
+        const Expanded(
+          child: FittedBox(
+            alignment: Alignment.centerLeft,
+            fit: BoxFit.scaleDown,
+            child: AppLogo(showRole: true, roleLabel: 'Landowner'),
+          ),
+        ),
         IconButton(
+          tooltip: 'Profile',
           onPressed: onProfile,
-          icon: const Icon(Icons.person_outline_rounded, size: 21, color: ink),
           padding: EdgeInsets.zero,
-          constraints: const BoxConstraints(minWidth: 28),
+          constraints: const BoxConstraints.tightFor(width: 28, height: 28),
+          icon: const Icon(Icons.person_outline_rounded, size: 21, color: ink),
         ),
       ],
     ),

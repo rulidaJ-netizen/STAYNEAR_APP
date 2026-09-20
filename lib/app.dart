@@ -1,71 +1,137 @@
 part of 'main.dart';
 
 class StayNearApp extends StatefulWidget {
-  const StayNearApp({super.key});
+  const StayNearApp({this.backend, this.initializationError, super.key});
+  final FirebaseBackend? backend;
+  final Object? initializationError;
   @override
   State<StayNearApp> createState() => _StayNearAppState();
 }
 
-class _StayNearAppState extends State<StayNearApp> {
+class _StayNearAppState extends State<StayNearApp> with _AddRoomFlow {
   UserRole role = UserRole.landlord;
   AppPage page = AppPage.auth;
   bool login = true;
   String? selectedListingId;
   AppPage listingOrigin = AppPage.boarderHome;
-  int wizardStep = 0;
-  Listing? ownerListing;
-  UserProfile? registeredUser;
+  AppPage editListingOrigin = AppPage.landlordDashboard;
+  @override
   UserProfile? activeUser;
-  final demoListing = Listing(
-    id: 'sample-jhes',
-    title: 'Jhes BH',
-    address: 'Poblacion Norte, Clarin, Bohol',
-    price: 1200,
-    image: roomImage,
-    availableRooms: 5,
-    totalRooms: 5,
-    averageRating: 4.8,
-    reviewCount: 24,
-    amenities: ['WiFi', 'Air Conditioning', 'Study Desk', 'Shared Kitchen'],
-    description: 'Student boarding house near the university in Clarin.',
-  );
+  late final backend = widget.backend ?? FirebaseBackend();
+  final _messenger = GlobalKey<ScaffoldMessengerState>();
+  StreamSubscription<User?>? _authSubscription;
+  StreamSubscription<DocumentSnapshot<Map<String, dynamic>>>?
+  _profileSubscription;
+  bool _authBusy = false;
+  int _authRequest = 0;
+  bool _emailVerificationSent = false;
+
+  void _requireFirebaseConfiguration() {
+    final error = widget.initializationError;
+    if (error != null) throw error;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initializationError != null) return;
+    _authSubscription = backend.auth.authStateChanges().listen((user) {
+      if (!_authBusy) _restoreSession(user);
+    }, onError: _reportError);
+  }
+
+  void _reportError(Object error) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _messenger.currentState?.showSnackBar(
+        SnackBar(content: Text(backendMessage(error))),
+      );
+    });
+  }
+
+  Future<void> _restoreSession(User? user) async {
+    final request = ++_authRequest;
+    if (user == null) {
+      _activate(null);
+      return;
+    }
+    try {
+      await backend.synchronizeAuthenticatedRole();
+      final profile = await backend.loadProfile();
+      if (mounted && request == _authRequest && !_authBusy) _activate(profile);
+    } catch (error) {
+      if (mounted && request == _authRequest) {
+        _activate(null);
+        _reportError(error);
+      }
+    }
+  }
+
+  void _activate(UserProfile? user) {
+    _profileSubscription?.cancel();
+    listingStore.bindUser(user);
+    if (!mounted) return;
+    setState(() {
+      activeUser = user;
+      selectedListingId = null;
+      login = true;
+      if (user != null) role = user.role;
+      page = user == null
+          ? AppPage.auth
+          : user.role == UserRole.landlord
+          ? AppPage.landlordDashboard
+          : AppPage.boarderHome;
+    });
+    if (user != null) {
+      _profileSubscription = backend.db
+          .collection('users')
+          .doc(user.id)
+          .snapshots()
+          .listen((snapshot) {
+            if (!mounted || activeUser?.id != user.id || !snapshot.exists) {
+              return;
+            }
+            try {
+              final profile = FirebaseBackend.profileFromData(
+                user.id,
+                snapshot.data()!,
+              );
+              setState(() => activeUser = profile);
+            } catch (error) {
+              _reportError(error);
+            }
+          }, onError: _reportError);
+    }
+  }
+
+  Future<void> _saveProfile(UserProfile updated) async {
+    final saved = await backend.saveProfile(updated);
+    if (!mounted || activeUser?.id != updated.id) {
+      throw StateError('The active account changed while saving.');
+    }
+    setState(() {
+      activeUser = saved.profile;
+      _emailVerificationSent = saved.emailVerificationSent;
+      page = AppPage.profile;
+    });
+  }
+
+  @override
   late final ListingStore listingStore = ListingStore(
-    samples: [
-      demoListing,
-      Listing(
-        id: 'sample-zaframar',
-        title: 'ZafraMar BH',
-        address: 'Clarin, Bohol',
-        price: 1200,
-        image: alternateRoomImage,
-        availableRooms: 2,
-        totalRooms: 2,
-        averageRating: 4.9,
-        reviewCount: 18,
-        amenities: ['WiFi', 'Study Desk', 'Laundry Area', 'Parking'],
-      ),
-      Listing(
-        id: 'sample-annhath',
-        title: "AnnHath's Boardinghouse",
-        address: 'Pob. Centro, Clarin, Bohol',
-        price: 1500,
-        image: roomImage,
-        availableRooms: 2,
-        totalRooms: 2,
-        averageRating: 4.7,
-        reviewCount: 31,
-        amenities: ['Air Conditioning', 'Private Bathroom', 'Furnished'],
-      ),
-    ],
+    backend: backend,
+    onError: _reportError,
   );
 
   @override
   void dispose() {
+    _authSubscription?.cancel();
+    _profileSubscription?.cancel();
     listingStore.dispose();
     super.dispose();
   }
 
   void openListing(Listing listing) {
+    listingStore.recordView(listing.id);
     setState(() {
       selectedListingId = listing.id;
       listingOrigin = page;
@@ -73,12 +139,31 @@ class _StayNearAppState extends State<StayNearApp> {
     });
   }
 
+  void _openEditListing(Listing listing) {
+    final current = listingStore.byId(listing.id);
+    if (activeUser?.role != UserRole.landlord ||
+        current == null ||
+        current.ownerId != activeUser?.id) {
+      return;
+    }
+    setState(() {
+      editListingOrigin = page == AppPage.listing
+          ? AppPage.listing
+          : AppPage.landlordDashboard;
+      selectedListingId = listing.id;
+      page = AppPage.editListing;
+    });
+  }
+
+  @override
   void go(AppPage next) => setState(() => page = next);
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'StayNear',
       debugShowCheckedModeBanner: false,
+      scaffoldMessengerKey: _messenger,
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: canvas,
@@ -95,9 +180,26 @@ class _StayNearAppState extends State<StayNearApp> {
                 role: role,
                 onRoleChanged: (r) => setState(() => role = r),
                 onLoginChanged: (v) => setState(() => login = v),
-                onRegister: (profile) {
+                initialError: widget.initializationError == null
+                    ? null
+                    : backendMessage(widget.initializationError!),
+                onResetPassword: (email) {
+                  _requireFirebaseConfiguration();
+                  return backend.resetPassword(email);
+                },
+                onRegister: (draft) async {
+                  _requireFirebaseConfiguration();
+                  if (_authBusy) return;
+                  _authBusy = true;
+                  ++_authRequest;
+                  late final UserProfile profile;
+                  try {
+                    profile = await backend.register(draft);
+                  } finally {
+                    _authBusy = false;
+                  }
+                  if (!mounted) return;
                   setState(() {
-                    registeredUser = profile;
                     activeUser = null;
                     role = profile.role;
                     login = true;
@@ -116,72 +218,74 @@ class _StayNearAppState extends State<StayNearApp> {
                       );
                   });
                 },
-                onLogin: (email, password, selectedRole) {
-                  final user = registeredUser;
-                  if (user == null ||
-                      user.email.toLowerCase() != email.trim().toLowerCase() ||
-                      user.password != password ||
-                      user.role != selectedRole) {
-                    return false;
+                onLogin: (email, password, selectedRole) async {
+                  _requireFirebaseConfiguration();
+                  if (_authBusy) return false;
+                  _authBusy = true;
+                  ++_authRequest;
+                  try {
+                    final user = await backend.login(
+                      email,
+                      password,
+                      expectedRole: selectedRole,
+                    );
+                    if (!mounted) return false;
+                    _activate(user);
+                    return true;
+                  } finally {
+                    _authBusy = false;
                   }
-                  setState(() {
-                    activeUser = user;
-                    role = user.role;
-                  });
-                  go(
-                    user.role == UserRole.landlord
-                        ? AppPage.landlordDashboard
-                        : AppPage.boarderHome,
-                  );
-                  return true;
                 },
               );
             case AppPage.landlordDashboard:
               body = LandlordDashboard(
-                listing: ownerListing,
-                onEdit: () => go(AppPage.editListing),
-                onDelete: () => _confirmDelete(context),
-                onAddRoom: () {
-                  setState(() => wizardStep = 0);
-                  go(AppPage.roomWizard);
-                },
+                store: listingStore,
+                ownerId: activeUser?.id,
+                onListing: openListing,
+                onEdit: _openEditListing,
+                onDelete: (listing) => _confirmDelete(context, listing),
+                onAddRoom: _openAddRoom,
                 onProfile: () => go(AppPage.profile),
               );
             case AppPage.editListing:
-              body = EditListingPage(
-                listing: ownerListing ?? demoListing,
-                onBack: () => go(AppPage.landlordDashboard),
-                onSave: (updated) {
-                  setState(() => ownerListing = updated);
-                  listingStore.upsert(updated);
-                  go(AppPage.landlordDashboard);
-                },
-              );
+              final listing = listingStore.byId(selectedListingId);
+              body = listing == null || listing.ownerId != activeUser?.id
+                  ? Column(
+                      children: [
+                        TopBar(
+                          title: 'Edit Listing',
+                          onBack: () => go(AppPage.landlordDashboard),
+                        ),
+                        const Expanded(
+                          child: EmptyState(
+                            icon: Icons.home_outlined,
+                            title: 'Listing no longer available',
+                            text:
+                                'Return to your dashboard to choose a listing.',
+                          ),
+                        ),
+                      ],
+                    )
+                  : EditListingPage(
+                      key: ValueKey(listing.id),
+                      listing: listing,
+                      onBack: () => go(editListingOrigin),
+                      onProfile: () => go(AppPage.profile),
+                      onSave: (updated) async {
+                        if (activeUser?.role != UserRole.landlord) {
+                          throw StateError(
+                            'Please sign in as the listing owner.',
+                          );
+                        }
+                        await listingStore.saveOwnedListing(
+                          updated,
+                          activeUser!.id,
+                        );
+                        if (mounted) go(editListingOrigin);
+                      },
+                    );
             case AppPage.roomWizard:
-              body = RoomWizard(
-                step: wizardStep,
-                onBack: () => go(AppPage.landlordDashboard),
-                onProfile: () => go(AppPage.profile),
-                onNext: () {
-                  if (wizardStep < 3) {
-                    setState(() => wizardStep++);
-                  }
-                },
-                onPrevious: () => setState(() => wizardStep--),
-                onPublish: (listing) {
-                  setState(() {
-                    wizardStep = 0;
-                    ownerListing = listing;
-                  });
-                  listingStore.upsert(listing);
-                  go(AppPage.landlordDashboard);
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) {
-                      _publishedDialog(context);
-                    }
-                  });
-                },
-              );
+              body = _buildAddRoom(context);
             case AppPage.boarderHome:
               body = BoarderDashboard(
                 store: listingStore,
@@ -218,10 +322,25 @@ class _StayNearAppState extends State<StayNearApp> {
                           ],
                         )
                       : ListingPage(
+                          key: ValueKey(selectedListing.id),
                           listing: selectedListing,
+                          store: listingStore,
+                          user: activeUser,
+                          additionalInformation:
+                              activeUser?.role == UserRole.landlord
+                              ? {'Views': '${selectedListing.views}'}
+                              : const {},
                           favorite: listingStore.isFavorite(selectedListing.id),
-                          onFavorite: () =>
-                              listingStore.toggleFavorite(selectedListing.id),
+                          onFavorite: activeUser?.role == UserRole.landlord
+                              ? null
+                              : () => listingStore.toggleFavorite(
+                                  selectedListing.id,
+                                ),
+                          onEdit:
+                              activeUser?.role == UserRole.landlord &&
+                                  selectedListing.ownerId == activeUser?.id
+                              ? () => _openEditListing(selectedListing)
+                              : null,
                           onBack: () => go(listingOrigin),
                         );
                 },
@@ -239,11 +358,41 @@ class _StayNearAppState extends State<StayNearApp> {
                 onFavorites: () => go(AppPage.favorites),
               );
             case AppPage.editProfile:
-              body = EditProfilePage(
-                role: role,
-                onBack: () => go(AppPage.profile),
-                onSave: () => _confirmProfileSave(context),
-              );
+              body = role == UserRole.boarder && activeUser != null
+                  ? EditProfilePage(
+                      user: activeUser!,
+                      onBack: () => go(AppPage.profile),
+                      onSave: (updated) async {
+                        await _saveProfile(updated);
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              _emailVerificationSent
+                                  ? 'Profile saved. Check your new email to verify the email change; keep using your current email until verified.'
+                                  : 'Profile updated successfully.',
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : LandownerEditProfilePage(
+                      user: activeUser!,
+                      onBack: () => go(AppPage.profile),
+                      onSave: (updated) async {
+                        await _saveProfile(updated);
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              _emailVerificationSent
+                                  ? 'Profile saved. Check your new email to verify the email change; keep using your current email until verified.'
+                                  : 'Profile updated successfully.',
+                            ),
+                          ),
+                        );
+                      },
+                    );
           }
           return ScreenFrame(child: body);
         },
@@ -251,7 +400,7 @@ class _StayNearAppState extends State<StayNearApp> {
     );
   }
 
-  void _confirmDelete(BuildContext context) {
+  void _confirmDelete(BuildContext context, Listing listing) {
     showDialog<void>(
       context: context,
       builder: (_) => Dialog(
@@ -317,13 +466,19 @@ class _StayNearAppState extends State<StayNearApp> {
                             borderRadius: BorderRadius.circular(7),
                           ),
                         ),
-                        onPressed: () {
+                        onPressed: () async {
                           Navigator.pop(context);
-                          final deletedListing = ownerListing;
-                          if (deletedListing != null) {
-                            listingStore.remove(deletedListing.id);
+                          if (listingStore.byId(listing.id)?.ownerId !=
+                              activeUser?.id) {
+                            return;
                           }
-                          setState(() => ownerListing = null);
+                          try {
+                            await listingStore.deleteOwned(listing.id);
+                          } catch (error) {
+                            _reportError(error);
+                            return;
+                          }
+                          if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Listing deleted')),
                           );
@@ -339,40 +494,6 @@ class _StayNearAppState extends State<StayNearApp> {
                     ),
                   ),
                 ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _publishedDialog(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (_) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(26, 32, 26, 34),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const CircleAvatar(
-                radius: 40,
-                backgroundColor: paleBlue,
-                child: Icon(Icons.check_rounded, color: blue, size: 46),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Listing Published\nsuccessfully!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 21,
-                  height: 1.35,
-                  fontWeight: FontWeight.w800,
-                  color: ink,
-                ),
               ),
             ],
           ),
@@ -418,13 +539,19 @@ class _StayNearAppState extends State<StayNearApp> {
                   style: const ButtonStyle(
                     backgroundColor: WidgetStatePropertyAll(Color(0xFFF44348)),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     Navigator.pop(context);
-                    setState(() {
-                      page = AppPage.auth;
-                      login = true;
-                      activeUser = null;
-                    });
+                    if (_authBusy) return;
+                    _authBusy = true;
+                    ++_authRequest;
+                    try {
+                      await backend.auth.signOut();
+                      if (mounted) _activate(null);
+                    } catch (error) {
+                      _reportError(error);
+                    } finally {
+                      _authBusy = false;
+                    }
                   },
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -434,66 +561,6 @@ class _StayNearAppState extends State<StayNearApp> {
                       Text('Yes', style: TextStyle(fontSize: 16)),
                     ],
                   ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(fontSize: 16, color: ink),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _confirmProfileSave(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 26, 24, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Edit Profile',
-                style: TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.w800,
-                  color: ink,
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Are you sure you want to save?',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF495064),
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: FilledButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    go(AppPage.profile);
-                  },
-                  child: const Text('Yes', style: TextStyle(fontSize: 16)),
                 ),
               ),
               const SizedBox(height: 12),

@@ -1,0 +1,17 @@
+{
+  "name": "staynear-functions",
+  "private": true,
+  "main": "index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "test": "node --test --test-isolation=none",
+    "verify-emulator": "node scripts/verify-emulator-auth-claim.js",
+    "backfill-auth-claims": "node scripts/backfill-authenticated-role.js"
+  },
+  "dependencies": {
+    "firebase-admin": "^14.4.0",
+    "firebase-functions": "^7.4.0"
+  }
+}

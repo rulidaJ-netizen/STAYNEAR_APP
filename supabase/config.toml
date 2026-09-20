@@ -1,0 +1,4 @@
+project_id = "drlaskltdvphtkjualvx"
+
+[functions.storage-authorize]
+verify_jwt = false

@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "stay_near" "\0"
+            VALUE "FileDescription", "StayNear" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "stay_near" "\0"
+            VALUE "InternalName", "StayNear" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
             VALUE "OriginalFilename", "stay_near.exe" "\0"
-            VALUE "ProductName", "stay_near" "\0"
+            VALUE "ProductName", "StayNear" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

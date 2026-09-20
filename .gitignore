@@ -43,6 +43,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/.kotlin/
 
 # Widget Preview related
 .widget_preview/
+
+# Local Firebase emulator data and tooling dependencies
+.firebase/
+**/node_modules/
+firebase-debug.log
+firestore-debug.log
+storage-debug.log

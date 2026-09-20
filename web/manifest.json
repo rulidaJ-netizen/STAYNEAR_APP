@@ -1,6 +1,6 @@
 {
-    "name": "stay_near",
-    "short_name": "stay_near",
+    "name": "StayNear",
+    "short_name": "StayNear",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

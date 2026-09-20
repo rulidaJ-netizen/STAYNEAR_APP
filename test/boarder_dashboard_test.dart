@@ -1,3 +1,5 @@
+import 'support/firebase_test_backend.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -159,12 +161,12 @@ void _mockFonts() {
 
 Future<void> _login(WidgetTester tester, UserRole role) async {
   final auth = tester.widget<AuthPage>(find.byType(AuthPage));
-  auth.onRegister(
+  await auth.onRegister(
     UserProfile(
       firstName: 'Test',
       middleName: '',
       lastName: 'User',
-      email: 'test@example.test',
+      email: '${role.name}@example.test',
       birthday: '2000-01-01',
       gender: 'Male',
       contact: '09123456789',
@@ -175,9 +177,9 @@ Future<void> _login(WidgetTester tester, UserRole role) async {
   );
   await tester.pumpAndSettle();
   expect(
-    tester
+    await tester
         .widget<AuthPage>(find.byType(AuthPage))
-        .onLogin('test@example.test', 'Password123!', role),
+        .onLogin('${role.name}@example.test', 'Password123!', role),
     isTrue,
   );
   await tester.pumpAndSettle();
@@ -393,8 +395,10 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await tester.pumpWidget(const StayNearApp());
+    final backend = TestFirebaseBackend();
+    await tester.pumpWidget(StayNearApp(backend: backend));
     await tester.pumpAndSettle();
+    await backend.seedListings();
     await _login(tester, UserRole.boarder);
     await tester.enterText(
       find.byKey(const ValueKey('boarder-search')),
@@ -478,11 +482,19 @@ void main() {
     'published and edited owner listing reaches Search and Favorites',
     (tester) async {
       _mockFonts();
+      const pickerChannel = MethodChannel('plugins.flutter.io/image_picker');
+      final messenger =
+          TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+      messenger.setMockMethodCallHandler(pickerChannel, (_) async => null);
+      addTearDown(
+        () => messenger.setMockMethodCallHandler(pickerChannel, null),
+      );
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      await tester.pumpWidget(const StayNearApp());
+      final backend = TestFirebaseBackend();
+      await tester.pumpWidget(StayNearApp(backend: backend));
       await tester.pumpAndSettle();
       await _login(tester, UserRole.landlord);
       tester
@@ -497,12 +509,15 @@ void main() {
         amenities: ['WiFi', 'Parking'],
         description: 'Owner description',
         availableRooms: 4,
+        totalRooms: 4,
       );
-      tester.widget<RoomWizard>(find.byType(RoomWizard)).onPublish(property);
+      final wizard = tester.widget<RoomWizard>(find.byType(RoomWizard));
+      await wizard.onPublish(property);
+      wizard.onPublished!();
       await tester.pumpAndSettle();
-      Navigator.of(tester.element(find.byType(Dialog))).pop();
-      await tester.pumpAndSettle();
-      tester.widget<LandlordDashboard>(find.byType(LandlordDashboard)).onEdit();
+      tester
+          .widget<LandlordDashboard>(find.byType(LandlordDashboard))
+          .onEdit(property);
       await tester.pumpAndSettle();
       final fields = tester
           .widgetList<TextField>(find.byType(TextField))
@@ -513,7 +528,7 @@ void main() {
               .text =
           'Updated Owner House';
       fields
-              .firstWhere((field) => field.controller?.text == 'PHP 2500')
+              .firstWhere((field) => field.controller?.text == 'PHP 2,500')
               .controller!
               .text =
           'PHP 3,000';
@@ -525,6 +540,9 @@ void main() {
               .text =
           'Updated description';
       await _tapVisible(tester, find.text('Save'));
+      expect(find.text('Loading photo…'), findsNothing);
+      expect(find.text('Please check the highlighted fields.'), findsNothing);
+      expect(find.textContaining('Could not save this listing'), findsNothing);
       tester
           .widget<LandlordDashboard>(find.byType(LandlordDashboard))
           .onProfile();
@@ -551,8 +569,8 @@ void main() {
       await tester.tap(find.byKey(ValueKey('property-${property.id}')));
       await tester.pumpAndSettle();
       expect(
-        tester.widget<ListingPage>(find.byType(ListingPage)).listing,
-        same(saved),
+        tester.widget<ListingPage>(find.byType(ListingPage)).listing.id,
+        saved.id,
       );
       expect(tester.takeException(), isNull);
     },

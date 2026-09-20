@@ -2,6 +2,7 @@ include: package:flutter_lints/flutter.yaml
 
 analyzer:
   exclude:
+    - tool/firebase/node_modules/**
     - build/**
     - android/**
     - ios/**

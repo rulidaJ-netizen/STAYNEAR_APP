@@ -12,8 +12,11 @@ class UserProfile {
     required this.gender,
     required this.contact,
     required this.address,
-    required this.password,
+    this.password = '',
     required this.role,
+    this.profilePhoto,
+    this.displayName,
+    this.accountId,
   });
 
   final String firstName;
@@ -26,12 +29,39 @@ class UserProfile {
   final String address;
   final String password;
   final UserRole role;
+  final String? profilePhoto, displayName, accountId;
+  String get id => accountId ?? '${role.name}:${email.trim().toLowerCase()}';
 
-  String get fullName => [firstName, middleName, lastName]
-      .where((part) => part.trim().isNotEmpty)
-      .join(' ');
+  String get fullName =>
+      displayName ??
+      [
+        firstName,
+        middleName,
+        lastName,
+      ].where((part) => part.trim().isNotEmpty).join(' ');
 
   String get roleLabel => role == UserRole.boarder ? 'Boarder' : 'Landowner';
+
+  UserProfile withProfileEdits({
+    required String fullName,
+    required String phone,
+    required String email,
+    required String address,
+    String? photo,
+  }) => UserProfile(
+    firstName: firstName,
+    middleName: middleName,
+    lastName: lastName,
+    displayName: fullName.trim(),
+    email: email.trim(),
+    contact: phone.trim(),
+    address: address.trim(),
+    profilePhoto: photo ?? profilePhoto,
+    birthday: birthday,
+    gender: gender,
+    role: role,
+    accountId: id,
+  );
 }
 
 enum AppPage {
