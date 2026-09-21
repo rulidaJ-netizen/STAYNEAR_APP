@@ -1,6 +1,3 @@
-import 'dart:async';
-
-import 'package:geocoding/geocoding.dart' as geocoding;
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -15,8 +12,6 @@ class PropertyLocationException implements Exception {
 
 /// Shared platform boundary, also injectable for navigation/location tests.
 class PropertyLocationService {
-  final Map<String, LatLng> _addresses = {};
-
   static double distanceBetween(LatLng boarder, LatLng property) =>
       Geolocator.distanceBetween(
         boarder.latitude,
@@ -53,7 +48,8 @@ class PropertyLocationService {
         !latitude.isFinite ||
         !longitude.isFinite ||
         latitude.abs() > 90 ||
-        longitude.abs() > 180) {
+        longitude.abs() > 180 ||
+        (latitude == 0 && longitude == 0)) {
       return null;
     }
     return LatLng(latitude, longitude);
@@ -87,25 +83,6 @@ class PropertyLocationService {
     return pin == null
         ? null
         : coordinates(double.tryParse(pin[1]!), double.tryParse(pin[2]!));
-  }
-
-  Future<LatLng?> resolve(
-    String address,
-    double? latitude,
-    double? longitude,
-  ) async {
-    final point = coordinates(latitude, longitude);
-    if (point != null) return point;
-    final query = address.trim();
-    if (query.isEmpty) return null;
-    if (_addresses.containsKey(query)) return _addresses[query];
-    final matches = await geocoding.Geocoding()
-        .locationFromAddress(query)
-        .timeout(const Duration(seconds: 12));
-    if (matches.isEmpty) return null;
-    final result = coordinates(matches.first.latitude, matches.first.longitude);
-    if (result != null) _addresses[query] = result;
-    return result;
   }
 
   Future<LatLng> currentLocation() async {
@@ -159,11 +136,11 @@ class PropertyLocationService {
     {'api': '1', 'query': destination(point, address)},
   );
 
-  static Uri directionsUri(LatLng origin, LatLng? point, String address) =>
+  static Uri directionsUri(LatLng point) =>
       Uri.https('www.google.com', '/maps/dir/', {
         'api': '1',
-        'origin': '${origin.latitude},${origin.longitude}',
-        'destination': destination(point, address),
+        'destination': '${point.latitude},${point.longitude}',
+        'travelmode': 'driving',
       });
 
   Future<bool> open(Uri uri) =>

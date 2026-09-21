@@ -26,9 +26,19 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
   shared_preferences_platform_interface: ^2.4.2
   fake_cloud_firestore: ^4.2.0
   firebase_auth_mocks: ^0.15.2
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/staynear_launcher.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/images/staynear_launcher.png"
+  adaptive_icon_foreground_inset: 5
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true

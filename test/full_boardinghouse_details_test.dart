@@ -101,24 +101,12 @@ class _Storage implements ReviewStorage {
 }
 
 class _Location extends PropertyLocationService {
-  LatLng? resolved;
-  LatLng origin = const LatLng(9.96, 124.02);
-  PropertyLocationException? failure;
   final List<Uri> opened = [];
   int requests = 0;
   @override
-  Future<LatLng?> resolve(
-    String address,
-    double? latitude,
-    double? longitude,
-  ) async => coordinates(latitude, longitude) ?? resolved;
-  static LatLng? coordinates(double? latitude, double? longitude) =>
-      PropertyLocationService.coordinates(latitude, longitude);
-  @override
   Future<LatLng> currentLocation() async {
     requests++;
-    if (failure != null) throw failure!;
-    return origin;
+    return const LatLng(9.96, 124.02);
   }
 
   @override
@@ -613,19 +601,18 @@ void main() {
   );
 
   test(
-    'coordinates and Maps links prefer the selected property and actual origin',
+    'coordinates and Maps links use the selected property as destination',
     () {
-      expect(PropertyLocationService.coordinates(0, 0), const LatLng(0, 0));
+      expect(PropertyLocationService.coordinates(0, 0), isNull);
       expect(PropertyLocationService.coordinates(91, 0), isNull);
       expect(PropertyLocationService.coordinates(double.nan, 0), isNull);
       expect(PropertyLocationService.coordinates(null, 124), isNull);
       final uri = PropertyLocationService.directionsUri(
-        const LatLng(9.96, 124.02),
         const LatLng(9.95, 124.03),
-        'Ignored address',
       );
-      expect(uri.queryParameters['origin'], '9.96,124.02');
+      expect(uri.queryParameters.containsKey('origin'), isFalse);
       expect(uri.queryParameters['destination'], '9.95,124.03');
+      expect(uri.queryParameters['travelmode'], 'driving');
       expect(
         PropertyLocationService.mapUri(
           null,
@@ -751,11 +738,13 @@ void main() {
   );
 
   testWidgets(
-    'Maps actions use the selected address; denied permission leaves map access working',
+    'Maps actions use exact coordinates and let Google Maps choose the origin',
     (tester) async {
       final store = ListingStore()
         ..upsert(
           _property(
+            latitude: 9.95,
+            longitude: 124.03,
             mapLink: 'https://www.google.com/maps/search/?api=1&query=Clarin%2C+Bohol',
           ),
         );
@@ -764,27 +753,42 @@ void main() {
       await _show(tester, store, location);
       expect(location.requests, 0);
       await _tap(tester, find.text('View on Google Maps'));
-      expect(location.opened.single.queryParameters['query'], 'Clarin, Bohol');
-      location.failure = const PropertyLocationException(
-        LocationProblem.denied,
-        'Location permission was denied.',
+      expect(location.opened.single.queryParameters['query'], '9.95,124.03');
+      await _tap(tester, find.text('Get Directions'));
+      expect(
+        location.opened.last.queryParameters.containsKey('origin'),
+        isFalse,
       );
-      await _tap(tester, find.text('Get Directions'));
-      expect(find.text('Location permission was denied.'), findsOneWidget);
-      expect(location.opened, hasLength(1));
-      location.failure = null;
-      await _tap(tester, find.text('Get Directions'));
-      expect(location.opened.last.queryParameters['origin'], '9.96,124.02');
       expect(
         location.opened.last.queryParameters['destination'],
-        'Clarin, Bohol',
+        '9.95,124.03',
       );
+      expect(location.opened.last.queryParameters['travelmode'], 'driving');
+      expect(location.requests, 0);
       expect(tester.takeException(), isNull);
     },
   );
 
+  testWidgets('missing coordinates never open a fallback destination', (
+    tester,
+  ) async {
+    final store = ListingStore()..upsert(_property());
+    addTearDown(store.dispose);
+    final location = _Location();
+    await _show(tester, store, location);
+    await _tap(tester, find.text('Get Directions'));
+    expect(location.opened, isEmpty);
+    expect(
+      find.text(
+        'The exact location for this boardinghouse is not available yet.',
+      ),
+      findsOneWidget,
+    );
+    expect(location.requests, 0);
+  });
+
   testWidgets(
-    'interactive map uses exact coordinates and real origin at 200 percent text size',
+    'interactive map and directions use exact coordinates at 200 percent text size',
     (tester) async {
       final store = ListingStore()
         ..upsert(_property(latitude: 9.95, longitude: 124.03));
@@ -807,9 +811,10 @@ void main() {
         '9.95,124.03',
       );
       expect(
-        tester.widget<MarkerLayer>(find.byType(MarkerLayer)).markers.last.point,
-        location.origin,
+        location.opened.single.queryParameters.containsKey('origin'),
+        isFalse,
       );
+      expect(location.requests, 0);
       await tester.pumpWidget(const SizedBox());
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);

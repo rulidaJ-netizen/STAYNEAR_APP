@@ -79,7 +79,6 @@ class FirebaseBackend {
   final Future<void> Function(User user) _synchronizeAuthClaims;
   FirebaseAuth get auth => _auth ?? FirebaseAuth.instance;
   FirebaseFirestore get db => _firestore ?? FirebaseFirestore.instance;
-  final _location = PropertyLocationService();
   String get uid =>
       auth.currentUser?.uid ?? (throw StateError('Please log in again.'));
 
@@ -469,28 +468,15 @@ class FirebaseBackend {
           .where((photo) => !draft.photos.contains(photo))
           .toList();
       final oldData = existing.data();
-      final addressChanged =
-          oldData != null && oldData['fullAddress'] != draft.address;
-      LatLng? point = addressChanged
-          ? null
-          : PropertyLocationService.coordinates(
-              draft.latitude,
-              draft.longitude,
-            );
-      if (!addressChanged) {
-        point ??= PropertyLocationService.coordinatesFromMapLink(
-          draft.houseInformation['Reference Map'] ?? '',
-        );
-      }
-      if (point == null) {
-        try {
-          point = await _location.resolve(draft.address, null, null);
-        } catch (_) {
-          /* Optional for old/address-only records. */
-        }
-      }
+      final point =
+          PropertyLocationService.coordinates(
+            draft.latitude,
+            draft.longitude,
+          ) ??
+          PropertyLocationService.coordinatesFromMapLink(
+            draft.houseInformation['Reference Map'] ?? '',
+          );
       final information = {...draft.houseInformation};
-      if (addressChanged) information.remove('Reference Map');
       final data = listingData(draft.copyWith(photos: photos))
         ..['latitude'] = point?.latitude
         ..['longitude'] = point?.longitude

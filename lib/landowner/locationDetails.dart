@@ -22,7 +22,7 @@ extension _LocationDetailsStep on _RoomWizardState {
               : null,
         ),
         const SizedBox(height: 24),
-        _stepLabel('Distance from University', required: true),
+        _stepLabel('Distance from University'),
         _stepField(
           distance,
           'Enter distance information',
@@ -39,12 +39,17 @@ extension _LocationDetailsStep on _RoomWizardState {
           'Paste a Google Maps link',
           keyboard: TextInputType.url,
           fill: const Color(0xFFF1F5F9),
-          validator: (value) =>
-              value == null ||
-                  value.trim().isEmpty ||
-                  PropertyLocationService.savedMapUri(value) != null
-              ? null
-              : 'Please enter a valid Google Maps link.',
+          validator: (value) {
+            if (value == null || value.trim().isEmpty) {
+              return 'Please provide the exact property location.';
+            }
+            if (PropertyLocationService.savedMapUri(value) == null) {
+              return 'Please enter a valid Google Maps link.';
+            }
+            return PropertyLocationService.coordinatesFromMapLink(value) == null
+                ? 'Please use a Google Maps link containing exact coordinates.'
+                : null;
+          },
         ),
         const SizedBox(height: 32),
         const Divider(height: 1, color: Color(0xFFE9F1FE)),

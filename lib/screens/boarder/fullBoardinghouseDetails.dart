@@ -40,8 +40,7 @@ class _ListingPageState extends State<ListingPage> {
   final _reviewsKey = GlobalKey();
   late final PropertyLocationService _location;
   int _photo = 0, _rating = 0;
-  int _locationRequest = 0;
-  bool _loadingMap = true, _loadingReviews = true, _submitting = false;
+  bool _loadingMap = false, _loadingReviews = true, _submitting = false;
   bool _locating = false;
   String? _reviewError, _formError;
   PropertyLocationException? _locationError;
@@ -80,26 +79,13 @@ class _ListingPageState extends State<ListingPage> {
     super.dispose();
   }
 
-  Future<void> _resolveLocation() async {
-    final request = ++_locationRequest;
+  void _resolveLocation() {
     final listing = _listing;
     setState(() {
-      _loadingMap = true;
-      _point = null;
-    });
-    LatLng? point;
-    try {
-      point = await _location.resolve(
-        listing.address,
+      _point = PropertyLocationService.coordinates(
         listing.latitude,
         listing.longitude,
       );
-    } catch (_) {
-      // Keep address-based Google Maps access available if geocoding fails.
-    }
-    if (!mounted || request != _locationRequest) return;
-    setState(() {
-      _point = point;
       _loadingMap = false;
     });
   }
@@ -139,28 +125,24 @@ class _ListingPageState extends State<ListingPage> {
 
   Future<void> _directions() async {
     if (_locating) return;
+    final point = PropertyLocationService.coordinates(
+      _listing.latitude,
+      _listing.longitude,
+    );
+    if (point == null) {
+      _message(
+        'The exact location for this boardinghouse is not available yet.',
+      );
+      return;
+    }
     setState(() {
       _locating = true;
       _locationError = null;
     });
     try {
-      final origin = await _location.currentLocation();
-      if (!mounted) return;
-      setState(() => _origin = origin);
-      await _open(
-        PropertyLocationService.directionsUri(origin, _point, _listing.address),
-      );
-    } on PropertyLocationException catch (error) {
-      if (mounted) setState(() => _locationError = error);
+      await _open(PropertyLocationService.directionsUri(point));
     } catch (_) {
-      if (mounted) {
-        setState(
-          () => _locationError = const PropertyLocationException(
-            LocationProblem.unavailable,
-            'Could not get your location. Please try again.',
-          ),
-        );
-      }
+      _message('Could not open Maps. Please try again.');
     } finally {
       if (mounted) setState(() => _locating = false);
     }
@@ -444,13 +426,15 @@ class _ListingPageState extends State<ListingPage> {
                                 alignment: Alignment.centerLeft,
                               ),
                               onPressed: () => _open(
-                                PropertyLocationService.savedMapUri(
-                                      listing.houseInformation['Reference Map'],
-                                    ) ??
-                                    PropertyLocationService.mapUri(
-                                      _point,
-                                      listing.address,
-                                    ),
+                                _point != null
+                                    ? PropertyLocationService.mapUri(
+                                        _point,
+                                        listing.address,
+                                      )
+                                    : PropertyLocationService.savedMapUri(
+                                        listing
+                                            .houseInformation['Reference Map'],
+                                      )!,
                               ),
                               child: const Text(
                                 'View on Google Maps',
@@ -974,19 +958,6 @@ class _ListingPageState extends State<ListingPage> {
                   ),
                 ),
         ),
-        if (_point != null &&
-            PropertyLocationService.coordinates(
-                  listing.latitude,
-                  listing.longitude,
-                ) ==
-                null)
-          const Padding(
-            padding: EdgeInsets.all(8),
-            child: Text(
-              'Location estimated from the supplied address.',
-              style: TextStyle(fontSize: 11, color: _detailsMuted),
-            ),
-          ),
       ],
     ),
   );
@@ -1014,10 +985,7 @@ class _ListingPageState extends State<ListingPage> {
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
-            onPressed:
-                _locating || (_point == null && listing.address.trim().isEmpty)
-                ? null
-                : _directions,
+            onPressed: _locating ? null : _directions,
             icon: _locating
                 ? const SizedBox(
                     width: 16,
@@ -1025,9 +993,7 @@ class _ListingPageState extends State<ListingPage> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.directions, size: 18),
-            label: Text(
-              _locating ? 'Getting your location…' : 'Get Directions',
-            ),
+            label: Text(_locating ? 'Opening Google Maps…' : 'Get Directions'),
             style: OutlinedButton.styleFrom(
               foregroundColor: _detailsBlue,
               side: const BorderSide(color: Color(0xFFD9E6FF)),
