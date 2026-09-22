@@ -125,17 +125,39 @@ void main() {
       expect(find.byTooltip('Remove Photo 1'), findsOneWidget);
       expect(find.byTooltip('Remove Photo 3'), findsOneWidget);
       await tap(tester, 'Next');
-      fill(tester, '5000', '2500');
+      final rentField = tester
+          .widgetList<TextField>(find.byType(TextField))
+          .singleWhere((field) => field.decoration?.hintText == '');
+      expect(rentField.controller!.text, isEmpty);
+      for (final label in [
+        'WiFi',
+        'Air Conditioning',
+        'Study Desk',
+        'Shared Kitchen',
+        'Private Bathroom',
+        'CCTV',
+        'Laundry Area',
+        'Parking',
+        'Balcony',
+      ]) {
+        expect(
+          tester
+              .widget<ChoiceChip>(find.widgetWithText(ChoiceChip, label))
+              .selected,
+          isFalse,
+        );
+      }
+      rentField.controller!.text = '2500';
       fill(tester, '0', '8');
       fill(tester, '0', '3', index: 1);
-      await tap(tester, 'Parking');
       for (final label in ['WiFi', 'Air Conditioning', 'Parking']) {
+        await tap(tester, label);
         final chip = tester.widget<ChoiceChip>(
           find.widgetWithText(ChoiceChip, label),
         );
         expect(chip.selected, isTrue);
         expect(chip.showCheckmark, isFalse);
-        expect(chip.selectedColor, const Color(0xFF3B82F6));
+        expect(chip.selectedColor, blue);
         expect(chip.labelStyle!.color, Colors.white);
       }
       await tap(tester, 'Balcony');
@@ -236,7 +258,7 @@ void main() {
       await tap(tester, 'Photo 1');
       await tap(tester, 'Choose from Gallery');
       await tap(tester, 'Next');
-      fill(tester, '5000', '2500');
+      fill(tester, '', '2500');
       fill(tester, '0', '2');
       fill(tester, '0', '1', index: 1);
       await tap(tester, 'Next');
@@ -282,7 +304,7 @@ void main() {
       await tap(tester, 'Photo 1');
       await tap(tester, 'Choose from Gallery');
       await tap(tester, 'Next');
-      fill(tester, '5000', '2500');
+      fill(tester, '', '2500');
       fill(tester, '0', '2');
       fill(tester, '0', '1', index: 1);
       await tap(tester, 'Next');
@@ -318,6 +340,31 @@ void main() {
     ]) {
       expect(PropertyLocationService.savedMapUri(link), isNull);
     }
+  });
+
+  test('Google Maps extracts exact @ coordinates and rejects invalid ranges', () {
+    const sample =
+        '  https://www.google.com/maps/@9.9621749,124.0246341,429m/data=!3m1!1e3?entry=ttu&g_ep=EgoyMDI2MDkxNi4wIKXMDSoASAFQAw%3D%3D  ';
+    final point = PropertyLocationService.coordinatesFromMapLink(sample);
+    expect(point?.latitude, 9.9621749);
+    expect(point?.longitude, 124.0246341);
+    final negative = PropertyLocationService.coordinatesFromMapLink(
+      'https://www.google.com/maps/@-9.5,-124.25,200m/data=!3m1!1e3',
+    );
+    expect(negative?.latitude, -9.5);
+    expect(negative?.longitude, -124.25);
+    expect(
+      PropertyLocationService.coordinatesFromMapLink(
+        'https://www.google.com/maps/@91,124.25,200m',
+      ),
+      isNull,
+    );
+    expect(
+      PropertyLocationService.coordinatesFromMapLink(
+        'https://www.google.com/maps/place/Clarin',
+      ),
+      isNull,
+    );
   });
 
   for (final step in [1, 2, 3]) {

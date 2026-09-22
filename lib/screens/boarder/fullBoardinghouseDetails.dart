@@ -199,7 +199,7 @@ class _ListingPageState extends State<ListingPage> {
     },
     child: Theme(
       data: Theme.of(context).copyWith(
-        textTheme: ThemeData(fontFamily: 'Roboto').textTheme
+        textTheme: Theme.of(context).textTheme
             .apply(bodyColor: _detailsInk, displayColor: _detailsInk),
         colorScheme: ColorScheme.fromSeed(seedColor: _detailsBlue),
       ),
@@ -211,6 +211,16 @@ class _ListingPageState extends State<ListingPage> {
             final listing = _listing;
             final reviews = widget.store.reviewsFor(listing.id);
             final summary = ReviewSummary(reviews);
+            final visibleInformation = {
+              ...listing.houseInformation,
+              ...widget.additionalInformation,
+            }..remove('Reference Map');
+            final landownerName = visibleInformation
+                .remove('Landowner')
+                ?.trim();
+            final distance = visibleInformation
+                .remove('Distance from University')
+                ?.trim();
             return SingleChildScrollView(
               key: ValueKey('full-details-${listing.id}'),
               keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
@@ -328,8 +338,9 @@ class _ListingPageState extends State<ListingPage> {
                         if (listing.totalRooms > 0 ||
                             listing.availableRooms > 0 ||
                             listing.contact.trim().isNotEmpty ||
-                            listing.houseInformation.isNotEmpty ||
-                            widget.additionalInformation.isNotEmpty)
+                            (landownerName?.isNotEmpty ?? false) ||
+                            (distance?.isNotEmpty ?? false) ||
+                            visibleInformation.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 12),
                             child: Column(
@@ -341,10 +352,14 @@ class _ListingPageState extends State<ListingPage> {
                                     'Rooms',
                                     '${listing.available ? listing.availableRooms : 0} available${listing.totalRooms > 0 ? ' / ${listing.totalRooms} total' : ''}',
                                   ),
-                                for (final item in {
-                                  ...listing.houseInformation,
-                                  ...widget.additionalInformation,
-                                }.entries)
+                                if (landownerName?.isNotEmpty ?? false)
+                                  _information('Landowner', landownerName!),
+                                if (distance?.isNotEmpty ?? false)
+                                  _information(
+                                    'Distance from University',
+                                    distance!,
+                                  ),
+                                for (final item in visibleInformation.entries)
                                   _information(item.key, item.value),
                                 if (listing.contact.trim().isNotEmpty)
                                   Row(
@@ -395,7 +410,7 @@ class _ListingPageState extends State<ListingPage> {
                             const Icon(
                               Icons.location_on,
                               color: _detailsBlue,
-                              size: 19,
+                              size: 18,
                             ),
                             const SizedBox(width: 5),
                             Expanded(
@@ -404,7 +419,7 @@ class _ListingPageState extends State<ListingPage> {
                                     ? 'No address provided.'
                                     : listing.address,
                                 style: const TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 12,
                                   color: _detailsMuted,
                                   height: 1.4,
                                 ),
@@ -439,7 +454,7 @@ class _ListingPageState extends State<ListingPage> {
                               child: const Text(
                                 'View on Google Maps',
                                 style: TextStyle(
-                                  fontSize: 14,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
@@ -704,7 +719,7 @@ class _ListingPageState extends State<ListingPage> {
                 TextSpan(
                   text: 'PHP ${listing.formattedPrice}',
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 17,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -727,7 +742,7 @@ class _ListingPageState extends State<ListingPage> {
       final name = Text(
         listing.title,
         style: const TextStyle(
-          fontSize: 24,
+          fontSize: 20,
           fontWeight: FontWeight.w700,
           height: 1.25,
         ),

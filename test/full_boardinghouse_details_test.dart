@@ -75,6 +75,8 @@ Listing _property({
   ],
   houseInformation: {
     'House rules': 'Quiet hours after 10 PM',
+    'Landowner': 'Owen Reyes',
+    'Distance from University': '160 meters',
     'Reference Map': ?mapLink,
   },
 );
@@ -216,6 +218,7 @@ void main() {
         _property(
           id: 'second',
           title: 'Second property',
+          mapLink: 'https://maps.google.com/?q=9.95,124.02',
         ).copyWith(ownerId: _owner.id),
       );
     addTearDown(store.dispose);
@@ -324,6 +327,18 @@ void main() {
     await _show(tester, store, _Location(), id: 'second', user: _user);
     expect(find.byKey(const ValueKey('review-comment')), findsOneWidget);
     expect(find.byKey(const ValueKey('submit-review')), findsOneWidget);
+    expect(
+      find.textContaining('Landowner: Owen Reyes', findRichText: true),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('Reference Map:', findRichText: true),
+      findsNothing,
+    );
+    expect(
+      find.textContaining('https://maps.google.com', findRichText: true),
+      findsNothing,
+    );
     await _tap(tester, find.byTooltip('Add to Favorites'));
     expect(store.isFavorite('second'), isTrue);
     await _show(tester, store, _Location(), id: 'second', user: _owner);
@@ -404,7 +419,7 @@ void main() {
       await _tap(tester, find.text('Photo 1'));
       await _tap(tester, find.text('Choose from Gallery'));
       await _tap(tester, find.text('Next'));
-      fill('5000', '2400');
+      fill('', '2400');
       final roomFields = tester
           .widgetList<TextField>(find.byType(TextField))
           .where((field) => field.decoration?.hintText == '0')
@@ -416,7 +431,7 @@ void main() {
       fill('Enter distance information', '500 m from university');
       fill(
         'Paste a Google Maps link',
-        'https://www.google.com/maps?q=9.95,124.03',
+        'https://www.google.com/maps/@9.9621749,124.0246341,429m/data=!3m1!1e3?entry=ttu&g_ep=EgoyMDI2MDkxNi4wIKXMDSoASAFQAw%3D%3D',
       );
       await _tap(tester, find.text('Publish Listing'));
       expect(published!.contact, '09123456789');
@@ -425,8 +440,8 @@ void main() {
         published!.houseInformation['Distance from University'],
         '500 m from university',
       );
-      expect(published!.latitude, 9.95);
-      expect(published!.longitude, 124.03);
+      expect(published!.latitude, 9.9621749);
+      expect(published!.longitude, 124.0246341);
       expect(published!.availableRooms, 2);
       expect(published!.available, isTrue);
       expect(tester.takeException(), isNull);
@@ -476,7 +491,7 @@ void main() {
       PropertyLocationService.coordinatesFromMapLink(
         'https://www.google.com/maps/@10,125,15z',
       ),
-      isNull,
+      const LatLng(10, 125),
     );
     expect(
       PropertyLocationService.coordinatesFromMapLink(
@@ -603,7 +618,7 @@ void main() {
   test(
     'coordinates and Maps links use the selected property as destination',
     () {
-      expect(PropertyLocationService.coordinates(0, 0), isNull);
+      expect(PropertyLocationService.coordinates(0, 0), const LatLng(0, 0));
       expect(PropertyLocationService.coordinates(91, 0), isNull);
       expect(PropertyLocationService.coordinates(double.nan, 0), isNull);
       expect(PropertyLocationService.coordinates(null, 124), isNull);

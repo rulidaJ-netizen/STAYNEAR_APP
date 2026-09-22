@@ -48,24 +48,17 @@ class PropertyLocationService {
         !latitude.isFinite ||
         !longitude.isFinite ||
         latitude.abs() > 90 ||
-        longitude.abs() > 180 ||
-        (latitude == 0 && longitude == 0)) {
+        longitude.abs() > 180) {
       return null;
     }
     return LatLng(latitude, longitude);
   }
 
-  /// Only use a pin/query coordinate, never the map camera's @lat,lng viewport.
+  /// Extract exact coordinates from supported Google Maps URL formats.
   static LatLng? coordinatesFromMapLink(String link) {
-    final uri = Uri.tryParse(link.trim());
-    if (uri == null ||
-        (uri.scheme != 'https' && uri.scheme != 'http') ||
-        !(uri.host == 'google.com' ||
-            uri.host.endsWith('.google.com') ||
-            uri.host == 'maps.google.com.ph' ||
-            uri.host == 'www.google.com.ph')) {
-      return null;
-    }
+    final trimmed = link.trim();
+    final uri = savedMapUri(trimmed);
+    if (uri == null) return null;
     for (final key in ['query', 'q', 'destination']) {
       final value = uri.queryParameters[key];
       if (value == null) continue;
@@ -79,10 +72,21 @@ class PropertyLocationService {
       }
     }
     final pin = RegExp(r'!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)')
-        .firstMatch(link);
-    return pin == null
+        .firstMatch(trimmed);
+    if (pin != null) {
+      return coordinates(double.tryParse(pin[1]!), double.tryParse(pin[2]!));
+    }
+    var searchable = trimmed;
+    try {
+      searchable = Uri.decodeFull(trimmed);
+    } on FormatException {
+      // The original URL can still contain a valid unencoded coordinate pair.
+    }
+    final exact = RegExp(r'@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)')
+        .firstMatch(searchable);
+    return exact == null
         ? null
-        : coordinates(double.tryParse(pin[1]!), double.tryParse(pin[2]!));
+        : coordinates(double.tryParse(exact[1]!), double.tryParse(exact[2]!));
   }
 
   Future<LatLng> currentLocation() async {

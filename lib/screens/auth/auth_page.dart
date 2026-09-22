@@ -28,42 +28,50 @@ class AuthPage extends StatefulWidget {
 class _AuthPageState extends State<AuthPage> {
   final email = TextEditingController();
   final password = TextEditingController();
-  final firstName = TextEditingController();
-  final lastName = TextEditingController();
-  final middleName = TextEditingController();
+  final fullName = TextEditingController();
   final contact = TextEditingController();
   final address = TextEditingController();
-  final birthday = TextEditingController();
+  final age = TextEditingController();
   final confirm = TextEditingController();
   final loginFormKey = GlobalKey<FormState>();
   final registrationFormKey = GlobalKey<FormState>();
   bool showPassword = false;
+  bool showConfirmPassword = false;
   String? gender;
   late String error = widget.initialError ?? '';
   bool _busy = false;
-  final nameFormatter = FilteringTextInputFormatter.allow(RegExp(r'[a-zA-Z ]'));
-  final middleInitialFormatter = TextInputFormatter.withFunction((
+  final capitalizeFirstLetterFormatter = TextInputFormatter.withFunction((
     oldValue,
     newValue,
   ) {
-    final value = newValue.text.toUpperCase();
-    if (value.isEmpty || RegExp(r'^[A-Z]\.?$').hasMatch(value)) {
-      return newValue.copyWith(
-        text: value,
-        selection: TextSelection.collapsed(offset: value.length),
-      );
-    }
-    return oldValue;
+    final firstLetter = RegExp(r'[a-zA-Z]').firstMatch(newValue.text);
+    if (firstLetter == null) return newValue;
+    final index = firstLetter.start;
+    final capitalized = newValue.text[index].toUpperCase();
+    if (newValue.text[index] == capitalized) return newValue;
+    return newValue.copyWith(
+      text: newValue.text.replaceRange(index, index + 1, capitalized),
+    );
+  });
+  final capitalizeNameFormatter = TextInputFormatter.withFunction((
+    oldValue,
+    newValue,
+  ) {
+    final capitalized = newValue.text.replaceAllMapped(
+      RegExp(r'(^|\s)[a-z]'),
+      (match) => match.group(0)!.toUpperCase(),
+    );
+    return capitalized == newValue.text
+        ? newValue
+        : newValue.copyWith(text: capitalized);
   });
 
   void handleRoleChanged(UserRole nextRole) {
-    firstName.clear();
-    lastName.clear();
-    middleName.clear();
+    fullName.clear();
     email.clear();
     contact.clear();
     address.clear();
-    birthday.clear();
+    age.clear();
     password.clear();
     confirm.clear();
     gender = null;
@@ -74,17 +82,10 @@ class _AuthPageState extends State<AuthPage> {
     setState(() {});
   }
 
-  String? firstNameValidator(String? value) {
+  String? fullNameValidator(String? value) {
     final name = value?.trim() ?? '';
     return name.isEmpty || !RegExp(r'^[a-zA-Z ]+$').hasMatch(name)
-        ? 'Invalid First Name'
-        : null;
-  }
-
-  String? lastNameValidator(String? value) {
-    final name = value?.trim() ?? '';
-    return name.isEmpty || !RegExp(r'^[a-zA-Z ]+$').hasMatch(name)
-        ? 'Invalid Last Name'
+        ? 'Invalid Full Name'
         : null;
   }
 
@@ -99,7 +100,7 @@ class _AuthPageState extends State<AuthPage> {
   String? contactValidator(String? value) {
     final contactValue = value?.trim() ?? '';
     if (!RegExp(r'^09\d{9}$').hasMatch(contactValue)) {
-      return 'Invalid Contact Number';
+      return 'Enter a valid 11-digit Contact Number';
     }
     return null;
   }
@@ -116,71 +117,72 @@ class _AuthPageState extends State<AuthPage> {
     return null;
   }
 
-  String? middleInitialValidator(String? value) {
-    if (!RegExp(r'^[A-Z]\.$').hasMatch(value?.trim() ?? '')) {
-      return 'Invalid Middle Initial';
+  String? ageValidator(String? value) {
+    final parsedAge = int.tryParse(value?.trim() ?? '');
+    if (parsedAge == null || parsedAge < 1 || parsedAge > 125) {
+      return 'Enter a valid Age';
     }
     return null;
   }
 
-  String? birthdayValidator(String? value) =>
-      value?.trim().isEmpty ?? true ? 'Please select your Birthday' : null;
-
-  String? addressValidator(String? value) =>
-      value?.trim().isEmpty ?? true ? 'Please enter your Address' : null;
-
-  Future<void> pickBirthday() async {
-    final selected = await showDatePicker(
-      context: context,
-      firstDate: DateTime(1900),
-      lastDate: DateTime.now(),
-      initialDate: DateTime(2000),
-    );
-    if (selected != null) {
-      birthday.text =
-          '${selected.month.toString().padLeft(2, '0')}/'
-          '${selected.day.toString().padLeft(2, '0')}/'
-          '${selected.year}';
+  String? addressValidator(String? value) {
+    final addressValue = value?.trim() ?? '';
+    if (addressValue.isEmpty) return 'Please enter your Address';
+    if (!RegExp(r'[a-zA-Z]').hasMatch(addressValue)) {
+      return 'Invalid Address';
     }
+    return null;
   }
 
-  Widget genderField() => Column(
+  Widget registrationGenderField() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       const Text(
         'Gender',
-        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: ink),
+        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: ink),
       ),
-      const SizedBox(height: 5),
+      const SizedBox(height: 9),
       DropdownButtonFormField<String>(
         initialValue: gender,
         isExpanded: true,
+        style: const TextStyle(fontSize: 14, color: ink),
         autovalidateMode: AutovalidateMode.onUserInteraction,
-        icon: const Icon(Icons.keyboard_arrow_down_rounded, size: 18),
+        icon: const Icon(
+          Icons.keyboard_arrow_down_rounded,
+          size: 24,
+          color: Color(0xFF6E7B91),
+        ),
         decoration: InputDecoration(
           prefixIcon: const Icon(
             Icons.person_outline,
-            size: 18,
-            color: Color(0xFF9FA9B8),
+            size: 24,
+            color: Color(0xFF98A8BF),
           ),
-          hintText: 'Select Gender',
-          hintStyle: const TextStyle(fontSize: 12, color: Color(0xFFA5AFBC)),
+          prefixIconConstraints: const BoxConstraints(minWidth: 52),
           filled: true,
-          fillColor: const Color(0xFFF0F4F9),
+          fillColor: const Color(0xFFF1F5F9),
           contentPadding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 14,
+            horizontal: 16,
+            vertical: 19,
           ),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
             borderSide: BorderSide.none,
           ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: blue, width: 1.25),
+          ),
           errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
             borderSide: const BorderSide(color: Color(0xFFDC2626)),
           ),
           focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
             borderSide: const BorderSide(color: Color(0xFFDC2626)),
           ),
           errorMaxLines: 2,
@@ -191,8 +193,14 @@ class _AuthPageState extends State<AuthPage> {
           ),
         ),
         items: const [
-          DropdownMenuItem(value: 'Male', child: Text('Male')),
-          DropdownMenuItem(value: 'Female', child: Text('Female')),
+          DropdownMenuItem(
+            value: 'Male',
+            child: Text('Male', style: TextStyle(fontSize: 14)),
+          ),
+          DropdownMenuItem(
+            value: 'Female',
+            child: Text('Female', style: TextStyle(fontSize: 14)),
+          ),
         ],
         onChanged: (value) => setState(() => gender = value),
         validator: (value) => value == null ? 'Please select a Gender' : null,
@@ -204,12 +212,10 @@ class _AuthPageState extends State<AuthPage> {
   void dispose() {
     email.dispose();
     password.dispose();
-    firstName.dispose();
-    lastName.dispose();
-    middleName.dispose();
+    fullName.dispose();
     contact.dispose();
     address.dispose();
-    birthday.dispose();
+    age.dispose();
     confirm.dispose();
     super.dispose();
   }
@@ -239,13 +245,17 @@ class _AuthPageState extends State<AuthPage> {
           setState(() => error = 'Invalid email or password');
         }
       } else {
+        final nameParts = fullName.text.trim().split(RegExp(r'\s+'));
+        final birthYear = DateTime.now().year - int.parse(age.text.trim());
         await widget.onRegister(
           UserProfile(
-            firstName: firstName.text.trim(),
-            middleName: middleName.text.trim(),
-            lastName: lastName.text.trim(),
+            firstName: nameParts.first,
+            middleName: nameParts.length > 2
+                ? nameParts.sublist(1, nameParts.length - 1).join(' ')
+                : '',
+            lastName: nameParts.length > 1 ? nameParts.last : '',
             email: email.text.trim(),
-            birthday: birthday.text.trim(),
+            birthday: '01/01/$birthYear',
             gender: gender!,
             contact: contact.text.trim(),
             address: address.text.trim(),
@@ -316,6 +326,8 @@ class _AuthPageState extends State<AuthPage> {
     VoidCallback? onTap,
     int? maxLength,
     ValueChanged<String>? onChanged,
+    bool? showText,
+    VoidCallback? onToggle,
   }) => AuthField(
     label: label,
     controller: controller,
@@ -331,10 +343,138 @@ class _AuthPageState extends State<AuthPage> {
     onTap: onTap,
     maxLength: maxLength,
     onChanged: onChanged,
-    showText: showPassword,
+    showText: showText ?? showPassword,
     onToggle: obscure
-        ? () => setState(() => showPassword = !showPassword)
+        ? onToggle ?? () => setState(() => showPassword = !showPassword)
         : null,
+  );
+
+  Widget registrationField(
+    String label,
+    TextEditingController controller, {
+    required IconData icon,
+    String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
+    TextInputType? keyboardType,
+    bool obscure = false,
+    bool showText = false,
+    VoidCallback? onToggle,
+  }) => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        label,
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w700,
+          color: ink,
+        ),
+      ),
+      const SizedBox(height: 9),
+      TextFormField(
+        controller: controller,
+        obscureText: obscure && !showText,
+        validator: validator,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        inputFormatters: inputFormatters,
+        keyboardType: keyboardType,
+        style: const TextStyle(fontSize: 15, color: ink),
+        decoration: InputDecoration(
+          prefixIcon: Icon(icon, size: 24, color: const Color(0xFF98A8BF)),
+          prefixIconConstraints: const BoxConstraints(minWidth: 52),
+          suffixIcon: onToggle == null
+              ? null
+              : IconButton(
+                  onPressed: onToggle,
+                  icon: Icon(
+                    showText
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    size: 24,
+                    color: const Color(0xFF98A8BF),
+                  ),
+                ),
+          filled: true,
+          fillColor: const Color(0xFFF1F5F9),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 19,
+          ),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: blue, width: 1.25),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: Color(0xFFDC2626)),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(18),
+            borderSide: const BorderSide(color: Color(0xFFDC2626)),
+          ),
+          errorMaxLines: 2,
+          errorStyle: const TextStyle(
+            fontSize: 11,
+            height: 1.1,
+            color: Colors.red,
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget registrationRoleSelector() => Container(
+    width: double.infinity,
+    height: 56,
+    padding: const EdgeInsets.all(4),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF0F4F8),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Row(
+      children: [
+        for (final option in const [
+          (label: 'Boarders', role: UserRole.boarder),
+          (label: 'Landowner', role: UserRole.landlord),
+        ])
+          Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => handleRoleChanged(option.role),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: widget.role == option.role
+                      ? const Color(0xFF2F6FED)
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(17),
+                ),
+                child: Text(
+                  option.label,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: widget.role == option.role
+                        ? FontWeight.w700
+                        : FontWeight.w500,
+                    color: widget.role == option.role
+                        ? Colors.white
+                        : const Color(0xFF6E819F),
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    ),
   );
 
   @override
@@ -475,181 +615,156 @@ class _AuthPageState extends State<AuthPage> {
         ),
       );
     }
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
-      child: CardShell(
-        padding: const EdgeInsets.fromLTRB(24, 24, 24, 22),
+    return ColoredBox(
+      color: Colors.white,
+      child: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: const EdgeInsets.fromLTRB(24, 40, 24, 34),
         child: Form(
           key: registrationFormKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Text(
                 'Create Account',
+                textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 30,
+                  fontSize: 32,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF0F172A),
+                  color: Color(0xFF10182B),
                 ),
               ),
-              const SizedBox(height: 7),
+              const SizedBox(height: 12),
               const Text(
                 'Fill in your details to get started',
-                style: TextStyle(fontSize: 14, color: Color(0xFF64748B)),
-              ),
-              const SizedBox(height: 34),
-              Segmented(
-                labels: const ['Boarders', 'Landowner'],
-                selected: widget.role == UserRole.landlord ? 1 : 0,
-                onChanged: (i) => handleRoleChanged(
-                  i == 1 ? UserRole.landlord : UserRole.boarder,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF6E819F),
                 ),
               ),
+              const SizedBox(height: 30),
+              registrationRoleSelector(),
               const SizedBox(height: 28),
-              Row(
-                children: [
-                  Expanded(
-                    child: field(
-                      'First Name',
-                      firstName,
-                      validator: firstNameValidator,
-                      inputFormatters: [nameFormatter],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: field(
-                      'Last Name',
-                      lastName,
-                      validator: lastNameValidator,
-                      inputFormatters: [nameFormatter],
-                    ),
-                  ),
-                ],
+              registrationField(
+                'Full Name',
+                fullName,
+                icon: Icons.person_outline,
+                validator: fullNameValidator,
+                inputFormatters: [capitalizeNameFormatter],
+                keyboardType: TextInputType.name,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 22),
+              registrationField(
+                'Email address',
+                email,
+                icon: Icons.mail_outline,
+                validator: emailValidator,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 22),
+              registrationField(
+                'Contact No.',
+                contact,
+                icon: Icons.phone_outlined,
+                validator: contactValidator,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(11),
+                ],
+                keyboardType: TextInputType.phone,
+              ),
+              const SizedBox(height: 22),
+              registrationField(
+                'Address',
+                address,
+                icon: Icons.location_on_outlined,
+                validator: addressValidator,
+                inputFormatters: [capitalizeFirstLetterFormatter],
+                keyboardType: TextInputType.streetAddress,
+              ),
+              const SizedBox(height: 22),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: field(
-                      'Middle Name',
-                      middleName,
+                    child: registrationField(
+                      'Age',
+                      age,
                       icon: Icons.person_outline,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: field(
-                      'Email Address',
-                      email,
-                      icon: Icons.mail_outline,
-                      validator: emailValidator,
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: field(
-                      'Birthday',
-                      birthday,
-                      icon: Icons.calendar_today_outlined,
-                      hint: 'mm/dd/yyyy',
-                      validator: birthdayValidator,
-                      readOnly: true,
-                      onTap: pickBirthday,
-                      suffixIcon: const Icon(
-                        Icons.calendar_today_outlined,
-                        size: 17,
-                        color: Color(0xFF94A3B8),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(child: genderField()),
-                ],
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: field(
-                      'Contact No.',
-                      contact,
-                      icon: Icons.phone_outlined,
-                      validator: contactValidator,
+                      validator: ageValidator,
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
-                        LengthLimitingTextInputFormatter(11),
+                        LengthLimitingTextInputFormatter(3),
                       ],
-                      keyboardType: TextInputType.phone,
-                      maxLength: 11,
+                      keyboardType: TextInputType.number,
                     ),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: field(
-                      'Address',
-                      address,
-                      icon: Icons.location_on_outlined,
-                      validator: addressValidator,
-                    ),
-                  ),
+                  const SizedBox(width: 12),
+                  Expanded(child: registrationGenderField()),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 22),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: field(
+                    child: registrationField(
                       'Create Password',
                       password,
                       icon: Icons.lock_outline,
                       obscure: true,
+                      showText: showPassword,
                       validator: passwordValidator,
+                      onToggle: () =>
+                          setState(() => showPassword = !showPassword),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: field(
+                    child: registrationField(
                       'Confirm Password',
                       confirm,
                       icon: Icons.lock_outline,
                       obscure: true,
+                      showText: showConfirmPassword,
                       validator: confirmPasswordValidator,
+                      onToggle: () => setState(
+                        () => showConfirmPassword = !showConfirmPassword,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 26),
+              const SizedBox(height: 34),
               SizedBox(
-                width: double.infinity,
-                height: 52,
+                height: 60,
                 child: FilledButton(
                   style: FilledButton.styleFrom(
-                    backgroundColor: const Color(0xFF3B82F6),
+                    backgroundColor: const Color(0xFF2F6FED),
                     foregroundColor: Colors.white,
+                    elevation: 3,
+                    shadowColor: const Color(0x552F6FED),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(18),
                     ),
                   ),
                   onPressed: submit,
                   child: const Text(
                     'Register',
-                    style: TextStyle(fontWeight: FontWeight.w700),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               Wrap(
                 alignment: WrapAlignment.center,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   const Text(
                     'Already have an account? ',
-                    style: TextStyle(fontSize: 13, color: muted),
+                    style: TextStyle(fontSize: 15, color: Color(0xFF6E819F)),
                   ),
                   TextButton(
                     onPressed: () => widget.onLoginChanged(true),
@@ -660,7 +775,11 @@ class _AuthPageState extends State<AuthPage> {
                     ),
                     child: const Text(
                       'Login here',
-                      style: TextStyle(fontSize: 13, color: blue),
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                        color: Color(0xFF2F6FED),
+                      ),
                     ),
                   ),
                 ],

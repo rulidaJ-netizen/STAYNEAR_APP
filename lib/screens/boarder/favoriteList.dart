@@ -112,7 +112,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                                     '${favoriteProperties.length} saved properties',
                                 style: const TextStyle(
                                   color: blue,
-                                  fontSize: 36,
+                                  fontSize: 24,
                                   height: 1.2,
                                   fontWeight: FontWeight.w800,
                                 ),
@@ -133,7 +133,7 @@ class _FavoritesPageState extends State<FavoritesPage> {
                             hintText: 'Search favorites by name, location,\namenities..',
                             hintMaxLines: 2,
                             hintStyle: const TextStyle(
-                              fontSize: 14,
+                              fontSize: 12,
                               height: 1.3,
                               color: Color(0xFFA0AEC0),
                             ),
@@ -292,7 +292,7 @@ class _FavoritePropertyCard extends StatelessWidget {
                       '${available ? listing.availableRooms : 0} Available',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -313,7 +313,7 @@ class _FavoritePropertyCard extends StatelessWidget {
                           listing.title,
                           style: const TextStyle(
                             color: ink,
-                            fontSize: 18,
+                            fontSize: 20,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
@@ -338,7 +338,7 @@ class _FavoritePropertyCard extends StatelessWidget {
                               color: available
                                   ? const Color(0xFF168D83)
                                   : muted,
-                              fontSize: 10,
+                              fontSize: 12,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -396,7 +396,7 @@ class _FavoritePropertyCard extends StatelessWidget {
                                 amenity,
                                 style: const TextStyle(
                                   color: blue,
-                                  fontSize: 11,
+                                  fontSize: 12,
                                   height: 1.2,
                                 ),
                               ),

@@ -38,7 +38,7 @@ class _RoomWizardState extends State<RoomWizard> {
   final contact = TextEditingController();
   final distance = TextEditingController();
   final referenceMap = TextEditingController();
-  final Set<String> selectedAmenities = {'WiFi', 'Air Conditioning'};
+  final Set<String> selectedAmenities = {};
 
   String? _basicValidationMessage() {
     final normalizedPhone = contact.text.trim().replaceAll(
@@ -360,7 +360,15 @@ mixin _AddRoomFlow on State<StayNearApp> {
         if (owner == null || owner.role != UserRole.landlord) {
           throw StateError('Please sign in as a Landowner.');
         }
-        await listingStore.publish(listing.copyWith(ownerId: owner.id));
+        await listingStore.publish(
+          listing.copyWith(
+            ownerId: owner.id,
+            houseInformation: {
+              ...listing.houseInformation,
+              'Landowner': owner.fullName,
+            },
+          ),
+        );
       },
       onPublished: () {
         if (!mounted) return;

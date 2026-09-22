@@ -13,12 +13,7 @@ class ProfilePage extends StatelessWidget {
   final VoidCallback onEdit, onLogout, onHome, onFavorites;
 
   Widget _buildBoarderProfile() {
-    const textStyle = TextStyle(
-      fontFamily: 'Roboto',
-      color: Color(0xFF191C1E),
-      fontWeight: FontWeight.w400,
-      letterSpacing: 0,
-    );
+    const textStyle = TextStyle(color: ink, fontWeight: FontWeight.w400);
     return ColoredBox(
       color: const Color(0xFFF7F9FB),
       child: Column(
@@ -35,9 +30,9 @@ class ProfilePage extends StatelessWidget {
                   child: Text(
                     'Profile',
                     style: textStyle.copyWith(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFF004BCC),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: blue,
                     ),
                   ),
                 ),
@@ -99,9 +94,9 @@ class ProfilePage extends StatelessWidget {
                       user?.fullName ?? 'Profile',
                       textAlign: TextAlign.center,
                       style: textStyle.copyWith(
-                        fontSize: 26,
-                        height: 1.2,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 24,
+                        height: 1.3,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 1),
@@ -117,9 +112,9 @@ class ProfilePage extends StatelessWidget {
                       child: Text(
                         user?.roleLabel ?? 'User',
                         style: textStyle.copyWith(
-                          fontSize: 16,
-                          height: 1.25,
-                          color: const Color(0xFF434654),
+                          fontSize: 12,
+                          height: 1.5,
+                          color: muted,
                         ),
                       ),
                     ),
@@ -164,7 +159,7 @@ class ProfilePage extends StatelessWidget {
                             vertical: 14,
                           ),
                           textStyle: textStyle.copyWith(
-                            fontSize: 18,
+                            fontSize: 13,
                             height: 1.3,
                             fontWeight: FontWeight.w700,
                           ),
@@ -196,7 +191,7 @@ class ProfilePage extends StatelessWidget {
                             vertical: 14,
                           ),
                           textStyle: textStyle.copyWith(
-                            fontSize: 18,
+                            fontSize: 13,
                             height: 1.3,
                             fontWeight: FontWeight.w700,
                           ),
@@ -235,12 +230,11 @@ class ProfilePage extends StatelessWidget {
             Text(
               label,
               style: const TextStyle(
-                fontFamily: 'Roboto',
-                fontSize: 13,
-                height: 18 / 13,
-                fontWeight: FontWeight.w400,
-                letterSpacing: 0,
-                color: Color(0xFF434654),
+                fontSize: 14,
+                height: 1.4,
+                fontWeight: FontWeight.w600,
+                letterSpacing: .4,
+                color: muted,
               ),
             ),
             const SizedBox(height: 3),
@@ -249,12 +243,10 @@ class ProfilePage extends StatelessWidget {
               child: Text(
                 value,
                 style: const TextStyle(
-                  fontFamily: 'Roboto',
-                  fontSize: 18,
-                  height: 24 / 18,
+                  fontSize: 16,
+                  height: 1.5,
                   fontWeight: FontWeight.w500,
-                  letterSpacing: 0,
-                  color: Color(0xFF191C1E),
+                  color: ink,
                 ),
               ),
             ),

@@ -132,8 +132,8 @@ class LandlordDashboard extends StatelessWidget {
                     const SliverToBoxAdapter(
                       child: EmptyState(
                         icon: Icons.home_work_outlined,
-                        title: 'No listings yet',
-                        text: 'Add a new room to publish your first listing.',
+                        title: 'No listing yet',
+                        text: 'Add new room to publish your new listing.',
                       ),
                     )
                   else
@@ -157,7 +157,12 @@ class LandlordDashboard extends StatelessWidget {
                       ),
                     ),
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      listings.isEmpty ? 24 : 0,
+                      16,
+                      32,
+                    ),
                     sliver: SliverToBoxAdapter(
                       child: FilledButton.icon(
                         onPressed: onAddRoom,
@@ -290,7 +295,7 @@ class ListingManagementCard extends StatelessWidget {
                     final name = Text(
                       listing.title,
                       style: const TextStyle(
-                        fontSize: 17,
+                        fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: _ownerInk,
                       ),
@@ -298,7 +303,7 @@ class ListingManagementCard extends StatelessWidget {
                     final price = Text(
                       'PHP ${listing.formattedPrice}',
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: _ownerBlue,
                       ),
@@ -465,7 +470,7 @@ class ListingRating extends StatelessWidget {
   Widget build(BuildContext context) => reviewCount == 0
       ? const Text(
           'No ratings yet',
-          style: TextStyle(fontSize: 11, color: _ownerMuted),
+          style: TextStyle(fontSize: 12, color: _ownerMuted),
         )
       : Wrap(
           crossAxisAlignment: WrapCrossAlignment.center,
@@ -482,7 +487,7 @@ class ListingRating extends StatelessWidget {
             ),
             Text(
               '($reviewCount ${reviewCount == 1 ? 'review' : 'reviews'})',
-              style: const TextStyle(fontSize: 11, color: _ownerMuted),
+              style: const TextStyle(fontSize: 12, color: _ownerMuted),
             ),
           ],
         );

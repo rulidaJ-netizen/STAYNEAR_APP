@@ -93,7 +93,7 @@ class BoarderListingCard extends StatelessWidget {
                     final title = Text(
                       listing.title,
                       style: const TextStyle(
-                        fontSize: 17,
+                        fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: ink,
                       ),
@@ -102,7 +102,7 @@ class BoarderListingCard extends StatelessWidget {
                       TextSpan(
                         text: 'PHP ${listing.formattedPrice}',
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: blue,
                         ),
@@ -110,7 +110,7 @@ class BoarderListingCard extends StatelessWidget {
                           TextSpan(
                             text: ' /mo',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 12,
                               fontWeight: FontWeight.normal,
                               color: muted,
                             ),
@@ -188,7 +188,7 @@ class BoarderListingRating extends StatelessWidget {
       ),
       Text(
         '(${listing.reviewCount} ${listing.reviewCount == 1 ? 'review' : 'reviews'})',
-        style: const TextStyle(fontSize: 11, color: muted),
+        style: const TextStyle(fontSize: 12, color: muted),
       ),
     ],
   );

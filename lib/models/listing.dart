@@ -89,6 +89,7 @@ class Listing {
     List<String>? photos,
     String? description,
     String? contact,
+    Map<String, String>? houseInformation,
   }) => Listing(
     id: id,
     ownerId: ownerId ?? this.ownerId,
@@ -109,7 +110,7 @@ class Listing {
     latitude: latitude,
     longitude: longitude,
     billingInfo: billingInfo,
-    houseInformation: houseInformation,
+    houseInformation: houseInformation ?? this.houseInformation,
   );
 
   String get formattedPrice => price.toString().replaceAllMapped(

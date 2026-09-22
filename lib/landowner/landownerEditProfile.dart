@@ -176,7 +176,7 @@ class _LandownerEditProfilePageState extends State<LandownerEditProfilePage> {
     },
     child: Theme(
       data: Theme.of(context).copyWith(
-        textTheme: ThemeData(fontFamily: 'Roboto').textTheme
+        textTheme: Theme.of(context).textTheme
             .apply(bodyColor: _ink, displayColor: _ink),
         colorScheme: ColorScheme.fromSeed(seedColor: _blue),
       ),
@@ -217,7 +217,7 @@ class _LandownerEditProfilePageState extends State<LandownerEditProfilePage> {
                         'Edit Profile',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontSize: 21,
+                          fontSize: 20,
                           fontWeight: FontWeight.w700,
                           color: _blue,
                         ),
@@ -308,6 +308,7 @@ class _LandownerEditProfilePageState extends State<LandownerEditProfilePage> {
                           _phone,
                           Icons.phone_outlined,
                           keyboard: TextInputType.phone,
+                          labelFontSize: 14,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
                               return 'Please enter your phone number.';
@@ -329,6 +330,7 @@ class _LandownerEditProfilePageState extends State<LandownerEditProfilePage> {
                           _email,
                           Icons.mail_outline,
                           keyboard: TextInputType.emailAddress,
+                          labelFontSize: 14,
                           validator: (value) =>
                               value == null ||
                                   !RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$')
@@ -344,6 +346,7 @@ class _LandownerEditProfilePageState extends State<LandownerEditProfilePage> {
                           Icons.location_on_outlined,
                           keyboard: TextInputType.streetAddress,
                           multiline: true,
+                          labelFontSize: 14,
                         ),
                         if (_error != null)
                           Padding(
@@ -411,11 +414,7 @@ class _LandownerEditProfilePageState extends State<LandownerEditProfilePage> {
         foregroundColor: foreground,
         minimumSize: const Size(0, 44),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        textStyle: const TextStyle(
-          fontFamily: 'Roboto',
-          fontSize: 16,
-          fontWeight: FontWeight.w500,
-        ),
+        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       );
 
@@ -426,14 +425,15 @@ class _LandownerEditProfilePageState extends State<LandownerEditProfilePage> {
     IconData icon, {
     required TextInputType keyboard,
     bool multiline = false,
+    double labelFontSize = 12,
     String? Function(String?)? validator,
   }) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(
         label,
-        style: const TextStyle(
-          fontSize: 12,
+        style: TextStyle(
+          fontSize: labelFontSize,
           fontWeight: FontWeight.w600,
           letterSpacing: .5,
           color: Color(0xFF6B7280),

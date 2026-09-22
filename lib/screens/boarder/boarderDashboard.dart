@@ -92,7 +92,7 @@ class _BoarderDashboardState extends State<BoarderDashboard> {
                           'Find Your Perfect Boarding\nHouse',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 23,
+                            fontSize: 24,
                             height: 1.3,
                             fontWeight: FontWeight.w800,
                             color: ink,
@@ -103,7 +103,7 @@ class _BoarderDashboardState extends State<BoarderDashboard> {
                           'Search from hundreds of verified properties near\nyour university',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 12,
+                            fontSize: 14,
                             height: 1.6,
                             color: muted,
                           ),

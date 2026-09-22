@@ -559,6 +559,7 @@ void main() {
       expect(saved.price, 3000);
       expect(saved.description, 'Updated description');
       expect(saved.amenities, ['WiFi', 'Parking']);
+      expect(saved.houseInformation['Landowner'], 'Test User');
       await _tapVisible(
         tester,
         find.byKey(ValueKey('favorite-${property.id}')),

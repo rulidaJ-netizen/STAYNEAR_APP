@@ -10,7 +10,7 @@ extension _PricingAndAvailabilityStep on _RoomWizardState {
       ),
       const SizedBox(height: 32),
       _stepLabel('Monthly Rent (PHP)', required: true),
-      _stepField(price, '5000', prefix: '₱'),
+      _stepField(price, '', prefix: '₱'),
       const SizedBox(height: 24),
       Row(
         crossAxisAlignment: CrossAxisAlignment.start,

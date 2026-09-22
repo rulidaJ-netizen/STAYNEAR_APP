@@ -160,7 +160,9 @@ class ListingStore extends ChangeNotifier {
   }
 
   void recordView(String id) {
-    if (backend == null || _user?.role != UserRole.boarder || !_viewed.add(id)) {
+    if (backend == null ||
+        _user?.role != UserRole.boarder ||
+        !_viewed.add(id)) {
       return;
     }
     final session = _session;
@@ -282,6 +284,7 @@ class ListingStore extends ChangeNotifier {
         photos: draft.photos,
         description: draft.description,
         contact: draft.contact,
+        houseInformation: draft.houseInformation,
       ),
     );
   }

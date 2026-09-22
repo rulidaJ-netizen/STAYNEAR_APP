@@ -190,9 +190,7 @@ extension _LocationDetailsStep on _RoomWizardState {
       controller.clear();
     }
     photos.fillRange(0, photos.length, null);
-    selectedAmenities
-      ..clear()
-      ..addAll(const ['WiFi', 'Air Conditioning']);
+    selectedAmenities.clear();
     photoError = null;
     _publishId = null;
   }

@@ -381,6 +381,39 @@ void main() {
     },
   );
 
+  testWidgets('empty dashboard separates its message from the add button', (
+    tester,
+  ) async {
+    _viewport(tester, const Size(390, 844));
+    final store = ListingStore();
+    addTearDown(store.dispose);
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ScreenFrame(
+          child: LandlordDashboard(
+            store: store,
+            ownerId: _owner.id,
+            onListing: (_) {},
+            onEdit: (_) {},
+            onDelete: (_) {},
+            onAddRoom: () {},
+            onProfile: () {},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final message = find.text('Add new room to publish your new listing.');
+    final button = find.widgetWithText(FilledButton, 'Add New Room');
+    expect(message, findsOneWidget);
+    expect(button, findsOneWidget);
+    expect(
+      tester.getTopLeft(button).dy - tester.getBottomLeft(message).dy,
+      greaterThanOrEqualTo(20),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   for (final size in [
     const Size(320, 568),
     const Size(390, 844),
@@ -470,9 +503,7 @@ void main() {
         dashboard().onAddRoom();
         await tester.pumpAndSettle();
         final wizard = tester.widget<RoomWizard>(find.byType(RoomWizard));
-        await wizard.onPublish(
-          _listing(id: id).copyWith(photos: [testPhoto]),
-        );
+        await wizard.onPublish(_listing(id: id).copyWith(photos: [testPhoto]));
         wizard.onPublished!();
         await tester.pumpAndSettle();
       }

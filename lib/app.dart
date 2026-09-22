@@ -168,7 +168,7 @@ class _StayNearAppState extends State<StayNearApp> with _AddRoomFlow {
         useMaterial3: true,
         scaffoldBackgroundColor: canvas,
         colorScheme: ColorScheme.fromSeed(seedColor: blue),
-        textTheme: GoogleFonts.plusJakartaSansTextTheme(),
+        fontFamily: 'StayNearSans',
       ),
       home: Builder(
         builder: (context) {
@@ -278,7 +278,12 @@ class _StayNearAppState extends State<StayNearApp> with _AddRoomFlow {
                           );
                         }
                         await listingStore.saveOwnedListing(
-                          updated,
+                          updated.copyWith(
+                            houseInformation: {
+                              ...updated.houseInformation,
+                              'Landowner': activeUser!.fullName,
+                            },
+                          ),
                           activeUser!.id,
                         );
                         if (mounted) go(editListingOrigin);
