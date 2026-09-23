@@ -141,13 +141,13 @@ void main() {
       expect(_value(tester, 'profile-address'), 'Clarin, Bohol');
       expect(find.byType(BottomNav), findsNothing);
       await _enter(tester, 'profile-name', 'Maria de la Cruz');
-      await _enter(tester, 'profile-phone', '+63 999 111 2222');
+      await _enter(tester, 'profile-phone', '09991112222');
       await _enter(tester, 'profile-email', 'updated@example.test');
       await _enter(tester, 'profile-address', 'New address');
       expect(_user.fullName, 'Maria C. Santos');
       await _tap(tester, find.byKey(const ValueKey('save-profile')));
       expect(submitted!.fullName, 'Maria de la Cruz');
-      expect(submitted!.contact, '+63 999 111 2222');
+      expect(submitted!.contact, '09991112222');
       expect(submitted!.email, 'updated@example.test');
       expect(submitted!.address, 'New address');
       expect(submitted!.profilePhoto, _photo);
@@ -238,7 +238,7 @@ void main() {
     await _tap(tester, find.byKey(const ValueKey('save-profile')));
     expect(saves, 0);
     expect(find.text('Please enter your full name.'), findsOneWidget);
-    expect(find.text('Please enter a valid phone number.'), findsOneWidget);
+    expect(find.text('Enter a valid contact number.'), findsOneWidget);
     expect(find.text('Please enter a valid email address.'), findsOneWidget);
     expect(find.text('Please enter your address.'), findsOneWidget);
     expect(_value(tester, 'profile-email'), 'invalid');
@@ -417,8 +417,12 @@ void main() {
         (await backend.loadProfile()).profilePhoto,
         startsWith('https://'),
       );
-      tester.widget<ProfilePage>(find.byType(ProfilePage)).onLogout();
+      final profilePage = tester.widget<ProfilePage>(find.byType(ProfilePage));
+      profilePage.onLogout();
+      profilePage.onLogout();
       await tester.pumpAndSettle();
+      expect(find.byType(Dialog), findsOneWidget);
+      expect(find.text('Are you sure you want to log out?'), findsOneWidget);
       await tester.tap(find.text('Yes'));
       await tester.pumpAndSettle();
       final auth = tester.widget<AuthPage>(find.byType(AuthPage));

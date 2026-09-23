@@ -41,16 +41,12 @@ class _RoomWizardState extends State<RoomWizard> {
   final Set<String> selectedAmenities = {};
 
   String? _basicValidationMessage() {
-    final normalizedPhone = contact.text.trim().replaceAll(
-      RegExp(r'[\s()\-]'),
-      '',
-    );
     return name.text.trim().isEmpty
         ? 'Please enter the property name.'
         : description.text.trim().isEmpty
         ? 'Please enter a description.'
-        : !RegExp(r'^\+?\d{10,15}$').hasMatch(normalizedPhone)
-        ? 'Please enter a valid contact number.'
+        : !RegExp(r'^\d{11}$').hasMatch(contact.text.trim())
+        ? 'Enter a valid contact number.'
         : null;
   }
 
@@ -224,25 +220,21 @@ class _RoomWizardState extends State<RoomWizard> {
         ),
         const SizedBox(height: 27),
         _roomLabel('Property Name *'),
-        _roomField(
-          controller: name,
-          hint: 'Cozy Student Room near Campus',
-          icon: Icons.home_outlined,
-        ),
+        _roomField(controller: name, hint: '', icon: Icons.home_outlined),
         const SizedBox(height: 25),
         _roomLabel('Description *'),
-        _roomField(
-          controller: description,
-          hint: 'Describe the room, facilities, and nearby amenities...',
-          multiline: true,
-        ),
+        _roomField(controller: description, hint: '', multiline: true),
         const SizedBox(height: 25),
         _roomLabel('Contact Number *'),
         _roomField(
           controller: contact,
-          hint: '09171234567',
+          hint: '',
           icon: Icons.phone_outlined,
-          keyboardType: TextInputType.phone,
+          keyboardType: TextInputType.number,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(11),
+          ],
         ),
         const SizedBox(height: 16),
         const Divider(height: 1, thickness: 1, color: Color(0xFFE9F1FE)),
@@ -298,6 +290,7 @@ class _RoomWizardState extends State<RoomWizard> {
     IconData? icon,
     bool multiline = false,
     TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
   }) => Builder(
     builder: (context) => SizedBox(
       height:
@@ -312,6 +305,7 @@ class _RoomWizardState extends State<RoomWizard> {
         maxLines: multiline ? 3 : 1,
         prefixIcon: icon,
         keyboardType: keyboardType,
+        inputFormatters: inputFormatters,
         fillColor: const Color(0xFFEFF4FF),
         borderColor: Colors.transparent,
         borderRadius: 12,

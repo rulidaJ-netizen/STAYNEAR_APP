@@ -98,13 +98,9 @@ void main() {
       Listing? result;
       final picker = Picker();
       await show(tester, picker, publish: (listing) => result = listing);
-      fill(tester, 'Cozy Student Room near Campus', 'Test property');
-      fill(
-        tester,
-        'Describe the room, facilities, and nearby amenities...',
-        'Description',
-      );
-      fill(tester, '09171234567', '09991234567');
+      fill(tester, '', 'Test property');
+      fill(tester, '', 'Description', index: 1);
+      fill(tester, '', '09991234567', index: 2);
       await tap(tester, 'Next');
       await tap(tester, 'Next');
       expect(
@@ -247,13 +243,9 @@ void main() {
         },
         published: () => completed++,
       );
-      fill(tester, 'Cozy Student Room near Campus', 'Test property');
-      fill(
-        tester,
-        'Describe the room, facilities, and nearby amenities...',
-        'Description',
-      );
-      fill(tester, '09171234567', '09991234567');
+      fill(tester, '', 'Test property');
+      fill(tester, '', 'Description', index: 1);
+      fill(tester, '', '09991234567', index: 2);
       await tap(tester, 'Next');
       await tap(tester, 'Photo 1');
       await tap(tester, 'Choose from Gallery');
@@ -293,13 +285,9 @@ void main() {
       for (var step = 0; step < 3; step++) {
         await tap(tester, 'Previous');
       }
-      fill(tester, 'Cozy Student Room near Campus', 'Retry property');
-      fill(
-        tester,
-        'Describe the room, facilities, and nearby amenities...',
-        'Retry description',
-      );
-      fill(tester, '09171234567', '09991234567');
+      fill(tester, '', 'Retry property');
+      fill(tester, '', 'Retry description', index: 1);
+      fill(tester, '', '09991234567', index: 2);
       await tap(tester, 'Next');
       await tap(tester, 'Photo 1');
       await tap(tester, 'Choose from Gallery');

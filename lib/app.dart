@@ -507,83 +507,118 @@ class _StayNearAppState extends State<StayNearApp> with _AddRoomFlow {
     );
   }
 
+  bool _logoutDialogOpen = false;
+
   void _logout(BuildContext context) {
+    if (_logoutDialogOpen) return;
+    _logoutDialogOpen = true;
     showDialog<void>(
       context: context,
-      builder: (_) => Dialog(
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 26, 24, 24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Logout',
-                style: TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.w800,
-                  color: ink,
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Are you sure you want to logout?',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF495064),
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: FilledButton(
-                  style: const ButtonStyle(
-                    backgroundColor: WidgetStatePropertyAll(Color(0xFFF44348)),
-                  ),
-                  onPressed: () async {
-                    Navigator.pop(context);
-                    if (_authBusy) return;
-                    _authBusy = true;
-                    ++_authRequest;
-                    try {
-                      await backend.auth.signOut();
-                      if (mounted) _activate(null);
-                    } catch (error) {
-                      _reportError(error);
-                    } finally {
-                      _authBusy = false;
-                    }
-                  },
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.logout, size: 18),
-                      SizedBox(width: 8),
-                      Text('Yes', style: TextStyle(fontSize: 16)),
-                    ],
+      barrierColor: Colors.black54,
+      builder: (dialogContext) => BackdropFilter(
+        filter: ui.ImageFilter.blur(sigmaX: 4, sigmaY: 4),
+        child: Dialog(
+          backgroundColor: Colors.white,
+          surfaceTintColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 26, 24, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Logout',
+                  style: TextStyle(
+                    fontFamily: 'StayNearSans',
+                    fontSize: 21,
+                    fontWeight: FontWeight.w800,
+                    color: ink,
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    'Cancel',
-                    style: TextStyle(fontSize: 16, color: ink),
+                const SizedBox(height: 12),
+                const Text(
+                  'Are you sure you want to log out?',
+                  style: TextStyle(
+                    fontFamily: 'StayNearSans',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w400,
+                    color: Color(0xFF495064),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFFF44348),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: () async {
+                      Navigator.pop(dialogContext);
+                      if (_authBusy) return;
+                      _authBusy = true;
+                      ++_authRequest;
+                      try {
+                        await backend.auth.signOut();
+                        if (mounted) _activate(null);
+                      } catch (error) {
+                        _reportError(error);
+                      } finally {
+                        _authBusy = false;
+                      }
+                    },
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.logout, size: 18),
+                        SizedBox(width: 8),
+                        Text(
+                          'Yes',
+                          style: TextStyle(
+                            fontFamily: 'StayNearSans',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: ink,
+                      side: const BorderSide(color: Color(0xFFB8BEC8)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(
+                        fontFamily: 'StayNearSans',
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    );
+    ).whenComplete(() => _logoutDialogOpen = false);
   }
 }

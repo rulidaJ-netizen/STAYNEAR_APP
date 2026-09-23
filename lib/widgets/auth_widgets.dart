@@ -269,6 +269,7 @@ class TextFieldBox extends StatelessWidget {
     this.textFontSize = 11,
     this.hintFontSize = 10,
     this.keyboardType,
+    this.inputFormatters,
     super.key,
   });
   final String hint;
@@ -284,12 +285,14 @@ class TextFieldBox extends StatelessWidget {
   final EdgeInsetsGeometry contentPadding;
   final double textFontSize, hintFontSize;
   final TextInputType? keyboardType;
+  final List<TextInputFormatter>? inputFormatters;
   @override
   Widget build(BuildContext context) => TextField(
     controller: controller,
     obscureText: obscure,
     maxLines: maxLines,
     keyboardType: keyboardType,
+    inputFormatters: inputFormatters,
     style: TextStyle(fontSize: textFontSize, color: ink),
     decoration: InputDecoration(
       prefixIcon: prefixIcon == null

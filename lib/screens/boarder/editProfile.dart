@@ -361,21 +361,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           'profile-phone',
                           _phone,
                           Icons.phone_outlined,
-                          keyboard: TextInputType.phone,
+                          keyboard: TextInputType.number,
                           labelFontSize: 14,
-                          validator: (value) {
-                            if (value == null || value.trim().isEmpty) {
-                              return 'Please enter your phone number.';
-                            }
-                            final digits = value.replaceAll(RegExp(r'\D'), '');
-                            if (!RegExp(r'^\+?[0-9\s().-]+$')
-                                    .hasMatch(value.trim()) ||
-                                digits.length < 7 ||
-                                digits.length > 15) {
-                              return 'Please enter a valid phone number.';
-                            }
-                            return null;
-                          },
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(11),
+                          ],
+                          validator: (value) =>
+                              RegExp(r'^\d{11}$').hasMatch(value?.trim() ?? '')
+                              ? null
+                              : 'Enter a valid contact number.',
                         ),
                         const SizedBox(height: 20),
                         _field(
@@ -481,6 +476,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     bool multiline = false,
     double labelFontSize = 12,
     String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
   }) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
@@ -511,6 +507,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           controller: controller,
           enabled: !_saving,
           keyboardType: keyboard,
+          inputFormatters: inputFormatters,
           minLines: multiline ? 2 : 1,
           maxLines: multiline ? 4 : 1,
           textInputAction: multiline

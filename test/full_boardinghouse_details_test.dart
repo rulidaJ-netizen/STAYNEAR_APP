@@ -398,7 +398,7 @@ void main() {
           ),
         ),
       );
-      void fill(String hint, String value) {
+      void fill(String hint, String value, {int index = 0}) {
         final fields = tester
             .widgetList<TextField>(find.byType(TextField))
             .where(
@@ -406,15 +406,12 @@ void main() {
                   field.decoration?.hintText == hint &&
                   field.controller != null,
             );
-        fields.last.controller!.text = value;
+        fields.elementAt(index).controller!.text = value;
       }
 
-      fill('Cozy Student Room near Campus', 'Owner property');
-      fill(
-        'Describe the room, facilities, and nearby amenities...',
-        'Full owner description',
-      );
-      fill('09171234567', '09123456789');
+      fill('', 'Owner property');
+      fill('', 'Full owner description', index: 1);
+      fill('', '09123456789', index: 2);
       await _tap(tester, find.text('Next'));
       await _tap(tester, find.text('Photo 1'));
       await _tap(tester, find.text('Choose from Gallery'));

@@ -363,18 +363,15 @@ class _EditListingPageState extends State<EditListingPage> {
                         _field(
                           'Contact Number',
                           _contact,
-                          keyboard: TextInputType.phone,
-                          validator: (value) {
-                            final phone = value?.trim() ?? '';
-                            if (phone.isEmpty) return null;
-                            final digits = phone.replaceAll(RegExp(r'\D'), '');
-                            return RegExp(r'^\+?[\d\s()\-]+$')
-                                        .hasMatch(phone) &&
-                                    digits.length >= 7 &&
-                                    digits.length <= 15
-                                ? null
-                                : 'Enter a valid contact number.';
-                          },
+                          keyboard: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                            LengthLimitingTextInputFormatter(11),
+                          ],
+                          validator: (value) =>
+                              RegExp(r'^\d{11}$').hasMatch(value?.trim() ?? '')
+                              ? null
+                              : 'Enter a valid contact number.',
                         ),
                         const SizedBox(height: 24),
                         _field(
@@ -563,6 +560,7 @@ class _EditListingPageState extends State<EditListingPage> {
     int maxLines = 1,
     bool optional = false,
     String? Function(String?)? validator,
+    List<TextInputFormatter>? inputFormatters,
   }) => Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
@@ -591,6 +589,7 @@ class _EditListingPageState extends State<EditListingPage> {
         controller: controller,
         enabled: !_saving,
         keyboardType: keyboard,
+        inputFormatters: inputFormatters,
         maxLines: maxLines,
         validator: validator,
         style: const TextStyle(fontSize: 12, height: 1.45, color: ink),

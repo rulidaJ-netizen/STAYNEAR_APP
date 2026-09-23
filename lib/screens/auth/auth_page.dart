@@ -99,8 +99,8 @@ class _AuthPageState extends State<AuthPage> {
 
   String? contactValidator(String? value) {
     final contactValue = value?.trim() ?? '';
-    if (!RegExp(r'^09\d{9}$').hasMatch(contactValue)) {
-      return 'Enter a valid 11-digit Contact Number';
+    if (!RegExp(r'^\d{11}$').hasMatch(contactValue)) {
+      return 'Enter a valid contact number.';
     }
     return null;
   }
@@ -673,7 +673,7 @@ class _AuthPageState extends State<AuthPage> {
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(11),
                 ],
-                keyboardType: TextInputType.phone,
+                keyboardType: TextInputType.number,
               ),
               const SizedBox(height: 22),
               registrationField(

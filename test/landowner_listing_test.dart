@@ -287,7 +287,7 @@ void main() {
       await _enter(tester, 'Monthly Price', 'PHP 12,345');
       await _enter(tester, 'Available Rooms', '2');
       await _enter(tester, 'Location', 'South Road, Clarin');
-      await _enter(tester, 'Contact Number', '0912 111 2222');
+      await _enter(tester, 'Contact Number', '09121112222');
       await _enter(tester, 'Description', 'A completely updated description.');
       await _tap(tester, find.text('Save'));
       final saved = store.byId(original.id)!;
@@ -296,7 +296,7 @@ void main() {
       expect(saved.availableRooms, 2);
       expect(saved.available, isFalse);
       expect(saved.address, 'South Road, Clarin');
-      expect(saved.contact, '0912 111 2222');
+      expect(saved.contact, '09121112222');
       expect(saved.description, 'A completely updated description.');
       expect(saved.photos, [
         _photo.replaceFirst('image/png;', 'image/png;name=replacement;'),

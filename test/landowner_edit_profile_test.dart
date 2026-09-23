@@ -106,7 +106,7 @@ void main() {
 
   for (final entry in {
     'profile-name': 'Updated Landowner',
-    'profile-phone': '+63 998 123 4567',
+    'profile-phone': '09981234567',
     'profile-email': 'owner.updated@example.test',
     'profile-address': 'Updated landowner address',
   }.entries) {
@@ -243,13 +243,13 @@ void main() {
       expect(_value(tester, 'profile-address'), 'Clarin, Bohol');
       expect(find.byType(BottomNav), findsNothing);
       await _enter(tester, 'profile-name', 'Maria de la Cruz');
-      await _enter(tester, 'profile-phone', '+63 999 111 2222');
+      await _enter(tester, 'profile-phone', '09991112222');
       await _enter(tester, 'profile-email', 'updated@example.test');
       await _enter(tester, 'profile-address', 'New address');
       expect(_user.fullName, 'Maria C. Santos');
       await _tap(tester, find.byKey(const ValueKey('save-profile')));
       expect(submitted!.fullName, 'Maria de la Cruz');
-      expect(submitted!.contact, '+63 999 111 2222');
+      expect(submitted!.contact, '09991112222');
       expect(submitted!.email, 'updated@example.test');
       expect(submitted!.address, 'New address');
       expect(submitted!.profilePhoto, _photo);
@@ -340,7 +340,7 @@ void main() {
     await _tap(tester, find.byKey(const ValueKey('save-profile')));
     expect(saves, 0);
     expect(find.text('Please enter your full name.'), findsOneWidget);
-    expect(find.text('Please enter a valid phone number.'), findsOneWidget);
+    expect(find.text('Enter a valid contact number.'), findsOneWidget);
     expect(find.text('Please enter a valid email address.'), findsOneWidget);
     expect(find.text('Please enter your address.'), findsOneWidget);
     expect(_value(tester, 'profile-email'), 'invalid');
@@ -536,7 +536,25 @@ void main() {
           .clearSnackBars();
       await tester.pumpAndSettle();
       await _tap(tester, find.text('Logout'));
-      expect(find.text('Are you sure you want to logout?'), findsOneWidget);
+      expect(find.text('Are you sure you want to log out?'), findsOneWidget);
+      expect(find.byType(BackdropFilter), findsOneWidget);
+      final dialog = tester.widget<Dialog>(find.byType(Dialog));
+      expect(
+        (dialog.shape! as RoundedRectangleBorder).borderRadius,
+        BorderRadius.circular(8),
+      );
+      for (final button in [
+        tester.widget<FilledButton>(find.widgetWithText(FilledButton, 'Yes')),
+        tester.widget<OutlinedButton>(
+          find.widgetWithText(OutlinedButton, 'Cancel'),
+        ),
+      ]) {
+        final shape = button.style!.shape!.resolve({})!;
+        expect(
+          (shape as RoundedRectangleBorder).borderRadius,
+          BorderRadius.circular(8),
+        );
+      }
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
       expect(find.byType(LandownerProfilePage), findsOneWidget);
